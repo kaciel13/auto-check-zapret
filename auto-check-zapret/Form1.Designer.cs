@@ -52,13 +52,14 @@
             mainTableLayout.Controls.Add(checktTableLayout, 0, 3);
             mainTableLayout.Dock = DockStyle.Fill;
             mainTableLayout.Location = new Point(0, 0);
+            mainTableLayout.Margin = new Padding(3, 4, 3, 4);
             mainTableLayout.Name = "mainTableLayout";
             mainTableLayout.RowCount = 4;
             mainTableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 28.0575542F));
             mainTableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 71.9424438F));
-            mainTableLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 29F));
-            mainTableLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 342F));
-            mainTableLayout.Size = new Size(484, 511);
+            mainTableLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 39F));
+            mainTableLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 456F));
+            mainTableLayout.Size = new Size(551, 671);
             mainTableLayout.TabIndex = 0;
             // 
             // tableLayoutPanel1
@@ -69,12 +70,13 @@
             tableLayoutPanel1.Controls.Add(choiceVersionComboBox, 0, 0);
             tableLayoutPanel1.Controls.Add(downloadButton, 1, 0);
             tableLayoutPanel1.Dock = DockStyle.Fill;
-            tableLayoutPanel1.Location = new Point(3, 3);
+            tableLayoutPanel1.Location = new Point(3, 4);
+            tableLayoutPanel1.Margin = new Padding(3, 4, 3, 4);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 1;
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanel1.Size = new Size(478, 33);
+            tableLayoutPanel1.Size = new Size(545, 41);
             tableLayoutPanel1.TabIndex = 1;
             // 
             // choiceVersionComboBox
@@ -82,9 +84,10 @@
             choiceVersionComboBox.Dock = DockStyle.Fill;
             choiceVersionComboBox.Font = new Font("Unispace", 11.9999981F, FontStyle.Bold, GraphicsUnit.Point, 0);
             choiceVersionComboBox.FormattingEnabled = true;
-            choiceVersionComboBox.Location = new Point(3, 3);
+            choiceVersionComboBox.Location = new Point(3, 4);
+            choiceVersionComboBox.Margin = new Padding(3, 4, 3, 4);
             choiceVersionComboBox.Name = "choiceVersionComboBox";
-            choiceVersionComboBox.Size = new Size(313, 27);
+            choiceVersionComboBox.Size = new Size(357, 32);
             choiceVersionComboBox.TabIndex = 0;
             choiceVersionComboBox.SelectedIndexChanged += choiceVersionComboBox_SelectedIndexChanged;
             // 
@@ -92,9 +95,10 @@
             // 
             downloadButton.Dock = DockStyle.Fill;
             downloadButton.Enabled = false;
-            downloadButton.Location = new Point(322, 3);
+            downloadButton.Location = new Point(366, 4);
+            downloadButton.Margin = new Padding(3, 4, 3, 4);
             downloadButton.Name = "downloadButton";
-            downloadButton.Size = new Size(153, 27);
+            downloadButton.Size = new Size(176, 33);
             downloadButton.TabIndex = 1;
             downloadButton.Text = "Не выбрана версия";
             downloadButton.UseVisualStyleBackColor = true;
@@ -103,20 +107,22 @@
             // infoTextBox
             // 
             infoTextBox.Dock = DockStyle.Fill;
-            infoTextBox.Location = new Point(3, 42);
+            infoTextBox.Location = new Point(3, 53);
+            infoTextBox.Margin = new Padding(3, 4, 3, 4);
             infoTextBox.Multiline = true;
             infoTextBox.Name = "infoTextBox";
             infoTextBox.ReadOnly = true;
             infoTextBox.ScrollBars = ScrollBars.Vertical;
-            infoTextBox.Size = new Size(478, 94);
+            infoTextBox.Size = new Size(545, 118);
             infoTextBox.TabIndex = 2;
             // 
             // progressBar
             // 
             progressBar.Dock = DockStyle.Fill;
-            progressBar.Location = new Point(3, 142);
+            progressBar.Location = new Point(3, 179);
+            progressBar.Margin = new Padding(3, 4, 3, 4);
             progressBar.Name = "progressBar";
-            progressBar.Size = new Size(478, 23);
+            progressBar.Size = new Size(545, 31);
             progressBar.TabIndex = 3;
             // 
             // checktTableLayout
@@ -126,19 +132,21 @@
             checktTableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             checktTableLayout.Controls.Add(button1, 0, 0);
             checktTableLayout.Dock = DockStyle.Fill;
-            checktTableLayout.Location = new Point(3, 171);
+            checktTableLayout.Location = new Point(3, 218);
+            checktTableLayout.Margin = new Padding(3, 4, 3, 4);
             checktTableLayout.Name = "checktTableLayout";
             checktTableLayout.RowCount = 2;
             checktTableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             checktTableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            checktTableLayout.Size = new Size(478, 337);
+            checktTableLayout.Size = new Size(545, 449);
             checktTableLayout.TabIndex = 4;
             // 
             // button1
             // 
-            button1.Location = new Point(3, 3);
+            button1.Location = new Point(3, 4);
+            button1.Margin = new Padding(3, 4, 3, 4);
             button1.Name = "button1";
-            button1.Size = new Size(233, 37);
+            button1.Size = new Size(266, 49);
             button1.TabIndex = 0;
             button1.Text = "Проверить все обходы";
             button1.UseVisualStyleBackColor = true;
@@ -146,12 +154,13 @@
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(484, 511);
+            ClientSize = new Size(551, 671);
             Controls.Add(mainTableLayout);
-            MaximumSize = new Size(500, 550);
-            MinimumSize = new Size(500, 550);
+            Margin = new Padding(3, 4, 3, 4);
+            MaximumSize = new Size(569, 718);
+            MinimumSize = new Size(569, 718);
             Name = "Form1";
             Text = "AutoCheckZapret";
             mainTableLayout.ResumeLayout(false);

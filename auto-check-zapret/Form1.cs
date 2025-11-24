@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace auto_check_zapret
 {
     public partial class Form1 : Form
@@ -15,19 +17,40 @@ namespace auto_check_zapret
 
         private async void LoadZapretVersions()
         {
-            infoTextBox.AppendText("Получение версий zapret на Githab" + Environment.NewLine);
-            versions = await parser.FetchReleasesAsync();
-            progressBar.Value = 90;
-            foreach (var version in versions)
+            try
             {
+                infoTextBox.AppendText("Получение версий zapret на Github" + Environment.NewLine);
+                versions = await parser.FetchReleasesAsync();
+                progressBar.Value = 90;
+                foreach (var version in versions)
+                {
 
-                choiceVersionComboBox.Items.Add("Zapret " + version.Key);
+                    choiceVersionComboBox.Items.Add("Zapret " + version.Key);
 
+                }
+                progressBar.Value = 100;
+
+                infoTextBox.AppendText("Версий получены" + Environment.NewLine);
+                choiceVersionComboBox.SelectedIndex = 0;
             }
-            progressBar.Value = 100;
+            catch (Exception ex){
+                infoTextBox.AppendText($"Ошибка получения версий c Github: {ex.Message}" + Environment.NewLine);
+                infoTextBox.AppendText($"Получение версий zapret из папки zaprets" + Environment.NewLine);
+                progressBar.Value = 50;
 
-            infoTextBox.AppendText("Версий получены" + Environment.NewLine);
-            choiceVersionComboBox.SelectedIndex = 0;
+                string zapretsPath = Path.Combine(Application.StartupPath, "zaprets");
+                string[] enableVersions = Directory.GetDirectories("zaprets", "*", SearchOption.TopDirectoryOnly);
+                progressBar.Value = 80;
+                foreach (var version in enableVersions)
+                {
+                    choiceVersionComboBox.Items.Add("Zapret " + version.Replace("zaprets\\zapret-discord-youtube-", ""));
+                }
+                infoTextBox.AppendText("Версий получены" + Environment.NewLine);
+                choiceVersionComboBox.SelectedIndex = 0;
+                progressBar.Value = 100;
+            }
+
+
         }
 
         private void choiceVersionComboBox_SelectedIndexChanged(object sender, EventArgs e)

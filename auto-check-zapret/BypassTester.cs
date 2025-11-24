@@ -38,7 +38,8 @@ namespace auto_check_zapret
                         RedirectStandardInput = true,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
-                        CreateNoWindow = true
+                        CreateNoWindow = true,
+                        LoadUserProfile = true
                     };
 
                     process.OutputDataReceived += (sender, e) =>
