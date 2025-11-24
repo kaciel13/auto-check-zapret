@@ -33,7 +33,8 @@ namespace auto_check_zapret
                 infoTextBox.AppendText("Версий получены" + Environment.NewLine);
                 choiceVersionComboBox.SelectedIndex = 0;
             }
-            catch (Exception ex){
+            catch (Exception ex)
+            {
                 infoTextBox.AppendText($"Ошибка получения версий c Github: {ex.Message}" + Environment.NewLine);
                 infoTextBox.AppendText($"Получение версий zapret из папки zaprets" + Environment.NewLine);
                 progressBar.Value = 50;
@@ -124,9 +125,18 @@ namespace auto_check_zapret
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
-            BypassTester tester = new BypassTester();
-            await tester.TestBypassAsync(Path.Combine("zaprets", $"zapret-discord-youtube-{version}"), infoTextBox);
+            ZapretService batService = new ZapretService(infoTextBox);
+            batService.BypassStart(Path.Combine("zaprets", "zapret-discord-youtube-1.9.0b"), 2);
+            ConnectTester connectTester = new ConnectTester(infoTextBox);
+            connectTester.TestConnections();
+        }
+
+        private void removeZapretButton_Click(object sender, EventArgs e)
+        {
+            ZapretService batService = new ZapretService(infoTextBox);
+            batService.ZapretRemove(Path.Combine("zaprets", "zapret-discord-youtube-1.9.0b"));
+            ConnectTester connectTester = new ConnectTester(infoTextBox);
+            connectTester.TestConnections();
         }
     }
 }
