@@ -19,30 +19,33 @@ namespace auto_check_zapret
 
 
         
-
-        public async Task<bool> OK(string url)
+        // Проверка доступности ресурса
+        private async Task<bool> OK(string url)
         {
-            try
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3))) // Устанавливаем таймаут в 3 секунды
             {
-                // Проверка разрешения хоста
-                var hostEntry = Dns.GetHostEntry(new Uri(url).Host);
+                try
+                {
+                    // Проверка разрешения хоста
+                    var hostEntry = Dns.GetHostEntry(new Uri(url).Host);
 
-                // Отправляем GET-запрос
-                HttpResponseMessage response = await httpClient.GetAsync(url);
-                return response.IsSuccessStatusCode;
-            }
-            catch
-            {
-                return false; // Если происходит ошибка, возвращаем false
+                    // Отправляем GET-запрос с использованием токена отмены
+                    HttpResponseMessage response = await httpClient.GetAsync(url, cts.Token);
+                    return response.IsSuccessStatusCode;
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
             }
         }
 
         public async Task<bool> TestConnections(){
-            info.AppendText("Подключение к discord..." + Environment.NewLine);
+            info.AppendText("Подключение к discord...");
             bool discordConnection = await OK("http://discord.com");
             info.AppendText($"Результат: {discordConnection}" + Environment.NewLine);
 
-            info.AppendText("Подключение к youtube..." + Environment.NewLine);
+            info.AppendText("Подключение к youtube...");
             bool youtubeConnection = await OK("https://www.youtube.com");
             info.AppendText($"Результат: {youtubeConnection}" + Environment.NewLine);
 

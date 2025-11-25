@@ -35,8 +35,10 @@
             infoTextBox = new TextBox();
             progressBar = new ProgressBar();
             checktTableLayout = new TableLayoutPanel();
-            button1 = new Button();
             removeZapretButton = new Button();
+            button1 = new Button();
+            trueChoiceComboBox = new ComboBox();
+            installZapretButton = new Button();
             mainTableLayout.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             checktTableLayout.SuspendLayout();
@@ -154,6 +156,8 @@
             checktTableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             checktTableLayout.Controls.Add(removeZapretButton, 1, 0);
             checktTableLayout.Controls.Add(button1, 0, 0);
+            checktTableLayout.Controls.Add(trueChoiceComboBox, 0, 1);
+            checktTableLayout.Controls.Add(installZapretButton, 1, 1);
             checktTableLayout.Dock = DockStyle.Fill;
             checktTableLayout.Location = new Point(4, 387);
             checktTableLayout.Margin = new Padding(4, 3, 4, 3);
@@ -163,6 +167,18 @@
             checktTableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             checktTableLayout.Size = new Size(752, 88);
             checktTableLayout.TabIndex = 4;
+            // 
+            // removeZapretButton
+            // 
+            removeZapretButton.Dock = DockStyle.Fill;
+            removeZapretButton.Location = new Point(380, 3);
+            removeZapretButton.Margin = new Padding(4, 3, 4, 3);
+            removeZapretButton.Name = "removeZapretButton";
+            removeZapretButton.Size = new Size(368, 38);
+            removeZapretButton.TabIndex = 1;
+            removeZapretButton.Text = "Отключить запрет";
+            removeZapretButton.UseVisualStyleBackColor = true;
+            removeZapretButton.Click += removeZapretButton_Click;
             // 
             // button1
             // 
@@ -176,17 +192,24 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
-            // removeZapretButton
+            // trueChoiceComboBox
             // 
-            removeZapretButton.Dock = DockStyle.Fill;
-            removeZapretButton.Location = new Point(380, 3);
-            removeZapretButton.Margin = new Padding(4, 3, 4, 3);
-            removeZapretButton.Name = "removeZapretButton";
-            removeZapretButton.Size = new Size(368, 38);
-            removeZapretButton.TabIndex = 1;
-            removeZapretButton.Text = "Проверить все обходы";
-            removeZapretButton.UseVisualStyleBackColor = true;
-            removeZapretButton.Click += removeZapretButton_Click;
+            trueChoiceComboBox.FormattingEnabled = true;
+            trueChoiceComboBox.Location = new Point(3, 47);
+            trueChoiceComboBox.Name = "trueChoiceComboBox";
+            trueChoiceComboBox.Size = new Size(121, 23);
+            trueChoiceComboBox.TabIndex = 2;
+            // 
+            // installZapretButton
+            // 
+            installZapretButton.Dock = DockStyle.Fill;
+            installZapretButton.Location = new Point(379, 47);
+            installZapretButton.Name = "installZapretButton";
+            installZapretButton.Size = new Size(370, 38);
+            installZapretButton.TabIndex = 3;
+            installZapretButton.Text = "Запуск выбранного обхода";
+            installZapretButton.UseVisualStyleBackColor = true;
+            installZapretButton.Click += installZapretButton_Click;
             // 
             // Form1
             // 
@@ -219,5 +242,7 @@
         private TableLayoutPanel checktTableLayout;
         private Button button1;
         private Button removeZapretButton;
+        private ComboBox trueChoiceComboBox;
+        private Button installZapretButton;
     }
 }
