@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <RootNamespace>auto_check_zapret</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
@@ -12,6 +12,10 @@
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="ICSharpCode.SharpZipLib.dll" Version="0.85.4.369" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="zaprets-bats\" />
   </ItemGroup>
 
 </Project>

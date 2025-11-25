@@ -1,226 +1,111 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
+using System.Text;
+using System.Timers;
 namespace auto_check_zapret
 {
-    public class BypassTester
+    partial class BypassTester
     {
-        public async Task<bool> TestBypassAsync(string folderPath, TextBox infoTextBox)
+        private Dictionary<string, int> countOfBypass = new Dictionary<string, int>
         {
-            if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
-            {
-                infoTextBox.AppendText($"❌ Папка не найдена: {folderPath}" + Environment.NewLine);
-                return false;
-            }
+            { "1.6.0", 5 },
+            { "1.6.1", 3 },
+            { "1.6.4", 2 },
+            { "1.6.5", 1 },
+            { "1.6.6", 4 },
+            { "1.7.1", 6 },
+            { "1.7.2", 2 },
+            { "1.7.2b", 12 },
+            { "1.8.0", 12 },
+            { "1.8.1", 14 },
+            { "1.8.2", 14 },
+            { "1.8.3", 14 },
+            { "1.8.4", 14 },
+            { "1.8.5", 15 },
+            { "1.9.0", 17 },
+            { "1.9.0b", 17 }
+        };
 
-            string serviceBatPath = Path.Combine(folderPath, "service.bat");
-            if (!File.Exists(serviceBatPath))
-            {
-                infoTextBox.AppendText($"❌ Файл service.bat не найден в папке: {folderPath}" + Environment.NewLine);
-                return false;
-            }
-
-            infoTextBox.AppendText($"🔍 Начинаю тестирование обхода из папки: {Path.GetFileName(folderPath)}" + Environment.NewLine);
-
-            try
-            {
-                // Запускаем service.bat
-                using (var process = new Process())
-                {
-                    process.StartInfo = new ProcessStartInfo
-                    {
-                        FileName = serviceBatPath,
-                        WorkingDirectory = folderPath,
-                        UseShellExecute = false,
-                        RedirectStandardInput = true,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                        LoadUserProfile = true
-                    };
-
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            infoTextBox.Invoke(new Action(() =>
-                                infoTextBox.AppendText($"[BAT] {e.Data}" + Environment.NewLine)));
-                        }
-                    };
-
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            infoTextBox.Invoke(new Action(() =>
-                                infoTextBox.AppendText($"[ERROR] {e.Data}" + Environment.NewLine)));
-                        }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine();
-
-                    // Имитируем ввод: 1 + Enter, 1 + Enter
-                    await Task.Delay(1000);
-                    await process.StandardInput.WriteLineAsync("2");
-                    await Task.Delay(1000);
-                    await process.StandardInput.WriteLineAsync("1");
-                    await Task.Delay(500);
-                    await process.StandardInput.WriteLineAsync("1");
-                    await Task.Delay(500);
-
-                    // Ждем завершения процесса или таймаут
-                    bool exited = process.WaitForExit(10000);
-                    if (!exited)
-                    {
-                        process.Kill();
-                        infoTextBox.AppendText("⚠ Процесс был завершен по таймауту" + Environment.NewLine);
-                    }
-
-                    await Task.Delay(2000); // Даем время для применения настроек
-                }
-
-                // Проверяем ping до YouTube и Discord
-                bool youtubeSuccess = await TestPingAsync("youtube.com", infoTextBox, "YouTube");
-                bool discordSuccess = await TestPingAsync("discord.com", infoTextBox, "Discord");
-
-                if (youtubeSuccess && discordSuccess)
-                {
-                    infoTextBox.AppendText($"✅ Обход работает корректно! Оба сервиса доступны." + Environment.NewLine);
-                    return true;
-                }
-                else
-                {
-                    infoTextBox.AppendText($"❌ Обход не работает. Проблемы с доступом к сервисам." + Environment.NewLine);
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                infoTextBox.AppendText($"❌ Ошибка при тестировании обхода: {ex.Message}" + Environment.NewLine);
-                return false;
-            }
+        TextBox info;
+        ProgressBar progress;
+        public BypassTester(TextBox infoTextBox, ProgressBar _progress)
+        {
+            info = infoTextBox;
+            progress = _progress;
         }
 
-        private async Task<bool> TestPingAsync(string host, TextBox infoTextBox, string serviceName)
+
+
+
+        public async Task<List<int>> BypassTest(string path, string version)
         {
+            progress.Value = 0;
             try
             {
-                using (var pingProcess = new Process())
+                GetCountOfBypass(version);
+            }
+            catch (ArgumentException e)
+            {
+                info.AppendText(e.Message + Environment.NewLine);
+                
+            }
+            int count = GetCountOfBypass(version);
+            info.AppendText($"Версия {version}. Кол-во вариантов обхода: {count}" + Environment.NewLine);
+            int progressSpan = 95 / count;
+            List<int> trueChoice = new List<int>();
+
+            try
+            {
+                Stopwatch timer = new Stopwatch();
+                info.AppendText($"Запускаю тестирование..." + Environment.NewLine);
+                timer.Start();
+                progress.Value = 5;
+                ConnectTester connectTester = new ConnectTester(info);
+                ZapretService zapretService = new ZapretService(info);
+                
+                
+
+                for (int i = 1; i <= count; i++)
                 {
-                    pingProcess.StartInfo = new ProcessStartInfo
+             
+                    zapretService.BypassStart(path, i);
+                    if (await connectTester.TestConnections())
                     {
-                        FileName = "ping",
-                        Arguments = $"-n 4 {host}", // 4 пакета для Windows
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
+                        trueChoice.Add(i);
                     };
-
-                    pingProcess.Start();
-                    string output = await pingProcess.StandardOutput.ReadToEndAsync();
-                    pingProcess.WaitForExit();
-
-                    // Анализируем результат ping
-                    if (output.Contains("TTL=") && !output.Contains("Превышен интервал"))
-                    {
-                        // Извлекаем среднее время задержки
-                        var avgDelay = ExtractAveragePing(output);
-                        infoTextBox.AppendText($"📡 {serviceName}: доступен, задержка {avgDelay} мс" + Environment.NewLine);
-
-                        // Считаем обход успешным если задержка меньше 500 мс
-                        return avgDelay < 500;
-                    }
-                    else
-                    {
-                        infoTextBox.AppendText($"❌ {serviceName}: недоступен или большая задержка" + Environment.NewLine);
-                        return false;
-                    }
+                    zapretService.ZapretRemove(path, version);
+                    progress.Value += progressSpan;
                 }
+                progress.Value = 100;
+                timer.Stop();
+                info.AppendText($"Тестирование завершено. Время тестирования: {timer.Elapsed.Minutes}:{timer.Elapsed.Seconds}:{timer.Elapsed.Milliseconds}" + Environment.NewLine);
+                return trueChoice;
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                infoTextBox.AppendText($"❌ Ошибка ping для {serviceName}: {ex.Message}" + Environment.NewLine);
-                return false;
+                progress.Value = 0;
+                info.AppendText($"Ошибка тестирования: {e.Message}" + Environment.NewLine);
+                return trueChoice;
             }
+
+
+
         }
 
-        private int ExtractAveragePing(string pingOutput)
+
+
+        private int GetCountOfBypass(string version)
         {
-            try
+            if (countOfBypass.TryGetValue(version, out int count))
             {
-                // Ищем строку с средним временем (для русского и английского Windows)
-                string[] lines = pingOutput.Split('\n');
-                foreach (string line in lines)
-                {
-                    if (line.Contains("Average =") || line.Contains("Среднее ="))
-                    {
-                        var parts = line.Split('=');
-                        if (parts.Length > 1)
-                        {
-                            var timePart = parts[1].Trim();
-                            var msIndex = timePart.IndexOf("ms");
-                            if (msIndex > 0)
-                            {
-                                var timeStr = timePart.Substring(0, msIndex).Trim();
-                                if (int.TryParse(timeStr, out int result))
-                                {
-                                    return result;
-                                }
-                            }
-                        }
-                    }
-                }
-                return 999; // Если не удалось извлечь - считаем большой задержкой
+                return count;
             }
-            catch
+            else
             {
-                return 999;
+                throw new ArgumentException("Версия не поддерживается: " + version);
             }
-        }
-
-        // Метод для поиска папки с bat файлами в установленной версии
-        public string FindBatFolder(string versionFolder)
-        {
-            if (!Directory.Exists(versionFolder))
-                return null;
-
-            // Ищем service.bat в различных возможных местах
-            string[] possiblePaths = {
-                versionFolder,
-                Path.Combine(versionFolder, "bin"),
-                Path.Combine(versionFolder, "scripts"),
-                Path.Combine(versionFolder, "zapret-discord-youtube", "bin"),
-                Path.Combine(versionFolder, "zapret-discord-youtube", "scripts")
-            };
-
-            foreach (string path in possiblePaths)
-            {
-                if (Directory.Exists(path) && File.Exists(Path.Combine(path, "service.bat")))
-                {
-                    return path;
-                }
-            }
-
-            // Если не нашли в стандартных путях, ищем рекурсивно
-            try
-            {
-                var batFiles = Directory.GetFiles(versionFolder, "service.bat", SearchOption.AllDirectories);
-                if (batFiles.Length > 0)
-                {
-                    return Path.GetDirectoryName(batFiles[0]);
-                }
-            }
-            catch
-            {
-                // Игнорируем ошибки доступа
-            }
-
-            return null;
         }
     }
 }

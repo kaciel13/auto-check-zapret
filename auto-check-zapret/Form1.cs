@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 
 namespace auto_check_zapret
@@ -33,7 +34,8 @@ namespace auto_check_zapret
                 infoTextBox.AppendText("Версий получены" + Environment.NewLine);
                 choiceVersionComboBox.SelectedIndex = 0;
             }
-            catch (Exception ex){
+            catch (Exception ex)
+            {
                 infoTextBox.AppendText($"Ошибка получения версий c Github: {ex.Message}" + Environment.NewLine);
                 infoTextBox.AppendText($"Получение версий zapret из папки zaprets" + Environment.NewLine);
                 progressBar.Value = 50;
@@ -124,9 +126,37 @@ namespace auto_check_zapret
 
         private async void button1_Click(object sender, EventArgs e)
         {
+            BypassTester tester = new BypassTester(infoTextBox, progressBar);
             string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
-            BypassTester tester = new BypassTester();
-            await tester.TestBypassAsync(Path.Combine("zaprets", $"zapret-discord-youtube-{version}"), infoTextBox);
+            string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
+
+            List<int> trueChoice = await tester.BypassTest(path, version);
+
+            if (trueChoice.Count > 0)
+            {
+                foreach (int choice in trueChoice)
+                {
+                    trueChoiceComboBox.Items.Add($"Пункт №{choice}");
+                }
+            }
+        }
+
+        private void removeZapretButton_Click(object sender, EventArgs e)
+        {
+            string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
+            string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
+            ZapretService zapretService = new ZapretService(infoTextBox);
+            zapretService.ZapretRemove(path, version);
+
+        }
+
+        private void installZapretButton_Click(object sender, EventArgs e)
+        {
+            ZapretService zapret = new ZapretService(infoTextBox);
+            string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
+            int choice = Convert.ToInt32(trueChoiceComboBox.Text.Replace("Пункт №", ""));
+            string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
+            zapret.BypassStart(path, choice);
         }
     }
 }
