@@ -137,11 +137,11 @@ public class ZapretParser
             File.Delete(downloadPath);
             progressBar.Value = 100;
 
-            infoTextBox.AppendText($"✅ Версия {version} успешно скачана и распакована" + Environment.NewLine);
+            infoTextBox.AppendText($"+ Версия {version} успешно скачана и распакована" + Environment.NewLine);
         }
         catch (Exception ex)
         {
-            infoTextBox.AppendText($"❌ Ошибка при обработке версии {version}: {ex.Message}" + Environment.NewLine);
+            infoTextBox.AppendText($"- Ошибка при обработке версии {version}: {ex.Message}" + Environment.NewLine);
             progressBar.Value = 0;
 
             // Очистка в случае ошибки

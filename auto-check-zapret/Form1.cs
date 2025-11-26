@@ -1,5 +1,8 @@
 using System;
+using System.Drawing.Text;
 using System.Numerics;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace auto_check_zapret
 {
@@ -7,14 +10,24 @@ namespace auto_check_zapret
     {
         Dictionary<string, string> versions;
         ZapretParser parser = new ZapretParser();
+        FontManager fontManager = new FontManager();
+
         public Form1()
         {
+            
+            fontManager.InstallCustomFont();
+            
             InitializeComponent();
             progressBar.Value = 0;
+            TesterModuleEnabe(false);
             infoTextBox.AppendText("Загрузка приложения..." + Environment.NewLine);
             progressBar.Value = 10;
             LoadZapretVersions();
         }
+
+
+
+ 
 
         private async void LoadZapretVersions()
         {
@@ -87,18 +100,29 @@ namespace auto_check_zapret
                 {
                     downloadButton.Enabled = false;
                     downloadButton.Text = "Уже установлено";
-                    infoTextBox.AppendText($"Найдена папка для версии {formattedVersion}:\n" + Environment.NewLine);
-                    foreach (string folder in matchingFolders)
-                    {
-                        infoTextBox.AppendText($"- {Path.GetFileName(folder)}" + Environment.NewLine);
-                    }
+                    TesterModuleEnabe(false);
+                    startTestButton.Enabled = true;
+                    startTestButton.BackColor = Color.FromArgb(110, 110, 100);
+                    startTestButton.ForeColor = Color.White;
+                    removeZapretButton.Enabled = true;
+                    removeZapretButton.BackColor = Color.FromArgb(110, 110, 100);
+                    removeZapretButton.ForeColor = Color.White;
+
+                    downloadButton.BackColor = Color.FromArgb(90, 90, 85); // Цвет фона
+                    downloadButton.ForeColor = Color.FromArgb(100,100,100); // Цвет текста
+
+
                 }
                 else
                 {
 
                     downloadButton.Enabled = true;
+                    downloadButton.BackColor = Color.FromArgb(110, 110, 100); // Цвет фона
+                    downloadButton.ForeColor = Color.White; // Цвет текста
                     downloadButton.Text = "Установить";
+                    TesterModuleEnabe(false);
                 }
+                
             }
         }
 
@@ -121,24 +145,33 @@ namespace auto_check_zapret
 
             await parser.DownloadAndExtractAsync(version, downloadUrl, infoTextBox, progressBar);
 
+            choiceVersionComboBox.SelectedItem = choiceVersionComboBox.SelectedIndex;
             infoTextBox.AppendText($"Скачивание завершено" + Environment.NewLine);
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private async void startTest_Click(object sender, EventArgs e)
         {
+            choiceVersionComboBox.Enabled = false;
             BypassTester tester = new BypassTester(infoTextBox, progressBar);
             string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
             string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
-
+            TesterModuleEnabe(false);
             List<int> trueChoice = await tester.BypassTest(path, version);
-
+            trueChoiceComboBox.Items.Clear();
             if (trueChoice.Count > 0)
             {
+                infoTextBox.AppendText($"Найдено {trueChoice.Count} рабочих обходов" + Environment.NewLine);
                 foreach (int choice in trueChoice)
                 {
                     trueChoiceComboBox.Items.Add($"Пункт №{choice}");
                 }
+                TesterModuleEnabe(true);
             }
+            else
+            {
+                infoTextBox.AppendText("Рабочие обходы не найдены" + Environment.NewLine);
+            }
+            choiceVersionComboBox.Enabled = true;
         }
 
         private void removeZapretButton_Click(object sender, EventArgs e)
@@ -150,13 +183,56 @@ namespace auto_check_zapret
 
         }
 
-        private void installZapretButton_Click(object sender, EventArgs e)
+        private void zapretInstallButton_Click(object sender, EventArgs e)
         {
-            ZapretService zapret = new ZapretService(infoTextBox);
-            string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
-            int choice = Convert.ToInt32(trueChoiceComboBox.Text.Replace("Пункт №", ""));
-            string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
-            zapret.BypassStart(path, choice);
+            if (trueChoiceComboBox.SelectedIndex != -1)
+            {
+                ZapretService zapret = new ZapretService(infoTextBox);
+                string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
+                int choice = Convert.ToInt32(trueChoiceComboBox.Text.Replace("Пункт №", ""));
+                string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
+                zapret.BypassStart(path, choice);
+            }
+            else
+            {
+                MessageBox.Show("Cначала нужно выбрать желаймый пункт");
+            }
+        }
+
+        private void TesterModuleEnabe(bool enabel)
+        {
+            removeZapretButton.Enabled = enabel;
+            zapretInstallButton.Enabled = enabel;
+            startTestButton.Enabled = enabel;
+            trueChoiceComboBox.Enabled = enabel;
+
+            if (enabel)
+            {
+                // Изменение цвета для включенного состояния
+                removeZapretButton.BackColor = Color.FromArgb(110, 110, 100);
+                zapretInstallButton.BackColor = Color.FromArgb(110, 110, 100);
+                startTestButton.BackColor = Color.FromArgb(110, 110, 100);
+                trueChoiceComboBox.BackColor = Color.FromArgb(110, 110, 100);
+
+                removeZapretButton.ForeColor = Color.White;
+                zapretInstallButton.ForeColor = Color.White;
+                startTestButton.ForeColor = Color.White;
+                trueChoiceComboBox.ForeColor = Color.White;
+            }
+            else
+            {
+                // Изменение цвета для выключенного состояния
+                removeZapretButton.BackColor = Color.FromArgb(90, 90, 85);
+                zapretInstallButton.BackColor = Color.FromArgb(90, 90, 85);
+                startTestButton.BackColor = Color.FromArgb(90, 90, 85);
+                trueChoiceComboBox.BackColor = Color.FromArgb(90, 90, 85);
+
+                removeZapretButton.ForeColor = Color.FromArgb(100, 100, 100);
+                zapretInstallButton.ForeColor = Color.FromArgb(100, 100, 100);
+                startTestButton.ForeColor = Color.FromArgb(100, 100, 100);
+                trueChoiceComboBox.ForeColor = Color.FromArgb(100, 100, 100);
+            }
+
         }
     }
 }

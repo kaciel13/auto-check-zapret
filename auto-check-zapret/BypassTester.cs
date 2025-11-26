@@ -25,7 +25,7 @@ namespace auto_check_zapret
             { "1.8.4", 14 },
             { "1.8.5", 15 },
             { "1.9.0", 17 },
-            { "1.9.0b", 17 }
+            { "1.9.0b", 3 }
         };
 
         TextBox info;
