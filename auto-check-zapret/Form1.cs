@@ -128,6 +128,7 @@ namespace auto_check_zapret
 
         private async void downloadButton_Click(object sender, EventArgs e)
         {
+            int index = choiceVersionComboBox.SelectedIndex;
             string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
             if (versions.TryGetValue(version, out string downloadUrl))
             {
@@ -145,7 +146,9 @@ namespace auto_check_zapret
 
             await parser.DownloadAndExtractAsync(version, downloadUrl, infoTextBox, progressBar);
 
-            choiceVersionComboBox.SelectedItem = choiceVersionComboBox.SelectedIndex;
+            
+            choiceVersionComboBox.SelectedIndex = 0;
+            choiceVersionComboBox.SelectedIndex = index;
             infoTextBox.AppendText($"Скачивание завершено" + Environment.NewLine);
         }
 

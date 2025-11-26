@@ -33,7 +33,7 @@ namespace auto_check_zapret
                     HttpResponseMessage response = await httpClient.GetAsync(url, cts.Token);
                     return response.IsSuccessStatusCode;
                 }
-                catch (Exception ex)
+                catch 
                 {
                     return false;
                 }

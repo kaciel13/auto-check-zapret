@@ -113,7 +113,7 @@
             choiceVersionComboBox.Dock = DockStyle.Fill;
             choiceVersionComboBox.FlatStyle = FlatStyle.Popup;
             choiceVersionComboBox.Font = new Font("Unispace", 11.25F, FontStyle.Bold);
-            choiceVersionComboBox.ForeColor = Color.Black;
+            choiceVersionComboBox.ForeColor = Color.White;
             choiceVersionComboBox.FormattingEnabled = true;
             choiceVersionComboBox.Location = new Point(10, 8);
             choiceVersionComboBox.Margin = new Padding(10, 8, 4, 0);
@@ -193,7 +193,7 @@
             trueChoiceComboBox.Dock = DockStyle.Fill;
             trueChoiceComboBox.FlatStyle = FlatStyle.Popup;
             trueChoiceComboBox.Font = new Font("Unispace", 11.25F, FontStyle.Bold);
-            trueChoiceComboBox.ForeColor = Color.Black;
+            trueChoiceComboBox.ForeColor = Color.White;
             trueChoiceComboBox.FormattingEnabled = true;
             trueChoiceComboBox.Location = new Point(10, 382);
             trueChoiceComboBox.Margin = new Padding(10, 8, 4, 0);
@@ -226,6 +226,7 @@
             infoTextBox.Margin = new Padding(20);
             infoTextBox.Multiline = true;
             infoTextBox.Name = "infoTextBox";
+            infoTextBox.ReadOnly = true;
             infoTextBox.Size = new Size(461, 220);
             infoTextBox.TabIndex = 0;
             // 

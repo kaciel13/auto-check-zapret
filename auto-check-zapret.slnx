@@ -1,3 +1,9 @@
 <Solution>
-  <Project Path="auto-check-zapret/auto-check-zapret.csproj" />
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="auto-check-zapret/auto-check-zapret.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
 </Solution>
