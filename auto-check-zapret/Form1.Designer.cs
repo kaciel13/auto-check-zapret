@@ -44,7 +44,7 @@
             // 
             // mainLayoutPanel
             // 
-            mainLayoutPanel.BackColor = Color.FromArgb(60, 60, 55);
+            mainLayoutPanel.BackColor = Color.FromArgb(50, 50, 40);
             mainLayoutPanel.ColumnCount = 12;
             mainLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 8.333333F));
             mainLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 8.333333F));
@@ -108,7 +108,7 @@
             // 
             // choiceVersionComboBox
             // 
-            choiceVersionComboBox.BackColor = Color.Gainsboro;
+            choiceVersionComboBox.BackColor = Color.FromArgb(130, 130, 120);
             mainLayoutPanel.SetColumnSpan(choiceVersionComboBox, 6);
             choiceVersionComboBox.Dock = DockStyle.Fill;
             choiceVersionComboBox.FlatStyle = FlatStyle.Popup;
@@ -188,7 +188,7 @@
             // 
             // trueChoiceComboBox
             // 
-            trueChoiceComboBox.BackColor = Color.Gainsboro;
+            trueChoiceComboBox.BackColor = Color.FromArgb(130, 130, 120);
             mainLayoutPanel.SetColumnSpan(trueChoiceComboBox, 6);
             trueChoiceComboBox.Dock = DockStyle.Fill;
             trueChoiceComboBox.FlatStyle = FlatStyle.Popup;
