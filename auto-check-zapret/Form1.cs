@@ -147,7 +147,7 @@ namespace auto_check_zapret
             await parser.DownloadAndExtractAsync(version, downloadUrl, infoTextBox, progressBar);
 
             
-            choiceVersionComboBox.SelectedIndex = 0;
+            choiceVersionComboBox.SelectedIndex = -1;
             choiceVersionComboBox.SelectedIndex = index;
             infoTextBox.AppendText($"Скачивание завершено" + Environment.NewLine);
         }
@@ -166,7 +166,7 @@ namespace auto_check_zapret
                 infoTextBox.AppendText($"Найдено {trueChoice.Count} рабочих обходов" + Environment.NewLine);
                 foreach (int choice in trueChoice)
                 {
-                    trueChoiceComboBox.Items.Add($"Пункт №{choice}");
+                    trueChoiceComboBox.Items.Add($"Bypass {choice}");
                 }
                 TesterModuleEnabe(true);
             }
@@ -192,7 +192,7 @@ namespace auto_check_zapret
             {
                 ZapretService zapret = new ZapretService(infoTextBox);
                 string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
-                int choice = Convert.ToInt32(trueChoiceComboBox.Text.Replace("Пункт №", ""));
+                int choice = Convert.ToInt32(trueChoiceComboBox.Text.Replace("Bypass ", ""));
                 string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
                 zapret.BypassStart(path, choice);
             }
