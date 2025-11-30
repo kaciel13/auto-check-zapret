@@ -1,5 +1,5 @@
 # AutoCheckZapret
-AutoCheckZapret - это приложения предназначеное для автоматической проверки проверки рабочих версий обхода [zapret-discord-youtube](https://github.com/Flowseal/zapret-discord-youtube).
+AutoCheckZapret - это приложения предназначеное для автоматической проверки рабочих версий обхода [zapret-discord-youtube](https://github.com/Flowseal/zapret-discord-youtube).
 ## Важно!!
 -Приложение поддерживает не все версии [zapret-discord-youtube](https://github.com/Flowseal/zapret-discord-youtube). Поддерживаемые версии указаны в релизе.
 -Приложение использует запуск .bat файлов zapret через cmd, поэтому для корректной работы необходимо запускать от имени администратора.
