@@ -14,9 +14,9 @@ namespace auto_check_zapret
 
         public Form1()
         {
-            
+
             fontManager.InstallCustomFont();
-            
+
             InitializeComponent();
             progressBar.Value = 0;
             TesterModuleEnabe(false);
@@ -27,7 +27,7 @@ namespace auto_check_zapret
 
 
 
- 
+
 
         private async void LoadZapretVersions()
         {
@@ -109,7 +109,7 @@ namespace auto_check_zapret
                     removeZapretButton.ForeColor = Color.White;
 
                     downloadButton.BackColor = Color.FromArgb(90, 90, 85); // Цвет фона
-                    downloadButton.ForeColor = Color.FromArgb(100,100,100); // Цвет текста
+                    downloadButton.ForeColor = Color.FromArgb(100, 100, 100); // Цвет текста
 
 
                 }
@@ -122,7 +122,7 @@ namespace auto_check_zapret
                     downloadButton.Text = "Установить";
                     TesterModuleEnabe(false);
                 }
-                
+
             }
         }
 
@@ -146,7 +146,7 @@ namespace auto_check_zapret
 
             await parser.DownloadAndExtractAsync(version, downloadUrl, infoTextBox, progressBar);
 
-            
+
             choiceVersionComboBox.SelectedIndex = -1;
             choiceVersionComboBox.SelectedIndex = index;
             infoTextBox.AppendText($"Скачивание завершено" + Environment.NewLine);
@@ -235,6 +235,19 @@ namespace auto_check_zapret
                 startTestButton.ForeColor = Color.FromArgb(100, 100, 100);
                 trueChoiceComboBox.ForeColor = Color.FromArgb(100, 100, 100);
             }
+
+        }
+
+        private async void autoModeButton_Click(object sender, EventArgs e)
+        {
+            choiceVersionComboBox.Enabled = false;
+            BypassTester tester = new BypassTester(infoTextBox, progressBar);
+            string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
+            string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
+            TesterModuleEnabe(false);
+            List<int> trueChoice = await tester.BypassTest(path, version, true);
+
+
 
         }
     }

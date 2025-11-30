@@ -250,6 +250,7 @@
             autoModeButton.TabIndex = 11;
             autoModeButton.Text = "Подобрать автоматический";
             autoModeButton.UseVisualStyleBackColor = false;
+            autoModeButton.Click += autoModeButton_Click;
             // 
             // Form1
             // 
