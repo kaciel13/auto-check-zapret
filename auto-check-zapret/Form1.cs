@@ -111,9 +111,13 @@ namespace auto_check_zapret
                     removeZapretButton.Enabled = true;
                     removeZapretButton.BackColor = Color.FromArgb(110, 110, 100);
                     removeZapretButton.ForeColor = Color.White;
+                    autoModeButton.Enabled = true;
+                    autoModeButton.BackColor = Color.FromArgb(110, 110, 100);
+                    autoModeButton.ForeColor = Color.White;
 
                     downloadButton.BackColor = Color.FromArgb(90, 90, 85); // Цвет фона
                     downloadButton.ForeColor = Color.FromArgb(100, 100, 100); // Цвет текста
+
 
 
                 }
@@ -212,6 +216,7 @@ namespace auto_check_zapret
             zapretInstallButton.Enabled = enabel;
             startTestButton.Enabled = enabel;
             trueChoiceComboBox.Enabled = enabel;
+            autoModeButton.Enabled = enabel;
 
             if (enabel)
             {
@@ -220,11 +225,13 @@ namespace auto_check_zapret
                 zapretInstallButton.BackColor = Color.FromArgb(110, 110, 100);
                 startTestButton.BackColor = Color.FromArgb(110, 110, 100);
                 trueChoiceComboBox.BackColor = Color.FromArgb(110, 110, 100);
+                autoModeButton.BackColor = Color.FromArgb(110, 110, 100);
 
                 removeZapretButton.ForeColor = Color.White;
                 zapretInstallButton.ForeColor = Color.White;
                 startTestButton.ForeColor = Color.White;
                 trueChoiceComboBox.ForeColor = Color.White;
+                autoModeButton.ForeColor = Color.White;
             }
             else
             {
@@ -233,11 +240,13 @@ namespace auto_check_zapret
                 zapretInstallButton.BackColor = Color.FromArgb(90, 90, 85);
                 startTestButton.BackColor = Color.FromArgb(90, 90, 85);
                 trueChoiceComboBox.BackColor = Color.FromArgb(90, 90, 85);
+                autoModeButton.BackColor = Color.FromArgb(90, 90, 85);
 
                 removeZapretButton.ForeColor = Color.FromArgb(100, 100, 100);
                 zapretInstallButton.ForeColor = Color.FromArgb(100, 100, 100);
                 startTestButton.ForeColor = Color.FromArgb(100, 100, 100);
                 trueChoiceComboBox.ForeColor = Color.FromArgb(100, 100, 100);
+                autoModeButton.ForeColor = Color.FromArgb(90, 90, 85);
             }
 
         }

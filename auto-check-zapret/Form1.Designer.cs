@@ -240,7 +240,7 @@
             mainLayoutPanel.SetColumnSpan(autoModeButton, 6);
             autoModeButton.Dock = DockStyle.Fill;
             autoModeButton.FlatAppearance.BorderSize = 0;
-            autoModeButton.FlatStyle = FlatStyle.Flat;
+            autoModeButton.FlatStyle = FlatStyle.Popup;
             autoModeButton.Font = new Font("Microsoft Yi Baiti", 12F);
             autoModeButton.ForeColor = Color.White;
             autoModeButton.Location = new Point(299, 461);
