@@ -14,6 +14,10 @@ namespace auto_check_zapret
 
         public Form1()
         {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            string versionString = version.ToString();
+
+            this.Text = "AutoCheckZapret v" + versionString.Substring(0, versionString.ToString().Length - 2);
 
             fontManager.InstallCustomFont();
 

@@ -263,7 +263,6 @@
             MaximumSize = new Size(612, 635);
             MinimumSize = new Size(612, 635);
             Name = "Form1";
-            Text = "AutoCheckZapret";
             mainLayoutPanel.ResumeLayout(false);
             screenPanel.ResumeLayout(false);
             screenPanel.PerformLayout();
