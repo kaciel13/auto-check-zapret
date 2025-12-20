@@ -38,6 +38,7 @@
             trueChoiceComboBox = new ComboBox();
             screenPanel = new Panel();
             infoTextBox = new TextBox();
+            autoModeButton = new Button();
             mainLayoutPanel.SuspendLayout();
             screenPanel.SuspendLayout();
             SuspendLayout();
@@ -66,6 +67,7 @@
             mainLayoutPanel.Controls.Add(progressBar, 0, 9);
             mainLayoutPanel.Controls.Add(trueChoiceComboBox, 0, 11);
             mainLayoutPanel.Controls.Add(screenPanel, 0, 1);
+            mainLayoutPanel.Controls.Add(autoModeButton, 6, 10);
             mainLayoutPanel.Dock = DockStyle.Fill;
             mainLayoutPanel.Font = new Font("LCD5x8H", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
             mainLayoutPanel.Location = new Point(0, 0);
@@ -85,7 +87,9 @@
             mainLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 7.69230747F));
             mainLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 7.69230747F));
             mainLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 7.69230747F));
-            mainLayoutPanel.Size = new Size(522, 449);
+            mainLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            mainLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            mainLayoutPanel.Size = new Size(594, 588);
             mainLayoutPanel.TabIndex = 0;
             // 
             // downloadButton
@@ -97,10 +101,10 @@
             downloadButton.FlatStyle = FlatStyle.Popup;
             downloadButton.Font = new Font("Microsoft Yi Baiti", 12F);
             downloadButton.ForeColor = Color.White;
-            downloadButton.Location = new Point(262, 8);
-            downloadButton.Margin = new Padding(4, 8, 10, 0);
+            downloadButton.Location = new Point(299, 11);
+            downloadButton.Margin = new Padding(5, 11, 11, 0);
             downloadButton.Name = "downloadButton";
-            downloadButton.Size = new Size(250, 26);
+            downloadButton.Size = new Size(284, 34);
             downloadButton.TabIndex = 7;
             downloadButton.Text = "Загрузка...";
             downloadButton.UseVisualStyleBackColor = false;
@@ -112,13 +116,13 @@
             mainLayoutPanel.SetColumnSpan(choiceVersionComboBox, 6);
             choiceVersionComboBox.Dock = DockStyle.Fill;
             choiceVersionComboBox.FlatStyle = FlatStyle.Popup;
-            choiceVersionComboBox.Font = new Font("Unispace", 11.25F, FontStyle.Bold);
+            choiceVersionComboBox.Font = new Font("Microsoft Sans Serif", 11.25F, FontStyle.Bold);
             choiceVersionComboBox.ForeColor = Color.White;
             choiceVersionComboBox.FormattingEnabled = true;
-            choiceVersionComboBox.Location = new Point(10, 8);
-            choiceVersionComboBox.Margin = new Padding(10, 8, 4, 0);
+            choiceVersionComboBox.Location = new Point(11, 11);
+            choiceVersionComboBox.Margin = new Padding(11, 11, 5, 0);
             choiceVersionComboBox.Name = "choiceVersionComboBox";
-            choiceVersionComboBox.Size = new Size(244, 26);
+            choiceVersionComboBox.Size = new Size(278, 32);
             choiceVersionComboBox.TabIndex = 1;
             choiceVersionComboBox.SelectedIndexChanged += choiceVersionComboBox_SelectedIndexChanged;
             // 
@@ -131,10 +135,10 @@
             zapretInstallButton.FlatStyle = FlatStyle.Popup;
             zapretInstallButton.Font = new Font("Microsoft Yi Baiti", 12F);
             zapretInstallButton.ForeColor = Color.White;
-            zapretInstallButton.Location = new Point(10, 416);
-            zapretInstallButton.Margin = new Padding(10, 8, 0, 8);
+            zapretInstallButton.Location = new Point(11, 551);
+            zapretInstallButton.Margin = new Padding(11, 11, 0, 11);
             zapretInstallButton.Name = "zapretInstallButton";
-            zapretInstallButton.Size = new Size(119, 25);
+            zapretInstallButton.Size = new Size(136, 26);
             zapretInstallButton.TabIndex = 4;
             zapretInstallButton.Text = "Включить";
             zapretInstallButton.UseVisualStyleBackColor = false;
@@ -149,10 +153,10 @@
             removeZapretButton.FlatStyle = FlatStyle.Popup;
             removeZapretButton.Font = new Font("Microsoft Yi Baiti", 12F);
             removeZapretButton.ForeColor = Color.White;
-            removeZapretButton.Location = new Point(133, 416);
-            removeZapretButton.Margin = new Padding(4, 8, 4, 8);
+            removeZapretButton.Location = new Point(152, 551);
+            removeZapretButton.Margin = new Padding(5, 11, 5, 11);
             removeZapretButton.Name = "removeZapretButton";
-            removeZapretButton.Size = new Size(121, 25);
+            removeZapretButton.Size = new Size(137, 26);
             removeZapretButton.TabIndex = 5;
             removeZapretButton.Text = "Отключить";
             removeZapretButton.UseVisualStyleBackColor = false;
@@ -167,10 +171,10 @@
             startTestButton.FlatStyle = FlatStyle.Popup;
             startTestButton.Font = new Font("Microsoft Yi Baiti", 12F);
             startTestButton.ForeColor = Color.White;
-            startTestButton.Location = new Point(10, 348);
-            startTestButton.Margin = new Padding(10, 8, 4, 0);
+            startTestButton.Location = new Point(11, 461);
+            startTestButton.Margin = new Padding(11, 11, 5, 0);
             startTestButton.Name = "startTestButton";
-            startTestButton.Size = new Size(244, 26);
+            startTestButton.Size = new Size(278, 34);
             startTestButton.TabIndex = 6;
             startTestButton.Text = "Запуск проверки";
             startTestButton.UseVisualStyleBackColor = false;
@@ -180,10 +184,10 @@
             // 
             mainLayoutPanel.SetColumnSpan(progressBar, 12);
             progressBar.Dock = DockStyle.Fill;
-            progressBar.Location = new Point(10, 314);
-            progressBar.Margin = new Padding(10, 8, 10, 0);
+            progressBar.Location = new Point(11, 416);
+            progressBar.Margin = new Padding(11, 11, 11, 0);
             progressBar.Name = "progressBar";
-            progressBar.Size = new Size(502, 26);
+            progressBar.Size = new Size(572, 34);
             progressBar.TabIndex = 8;
             // 
             // trueChoiceComboBox
@@ -192,13 +196,13 @@
             mainLayoutPanel.SetColumnSpan(trueChoiceComboBox, 6);
             trueChoiceComboBox.Dock = DockStyle.Fill;
             trueChoiceComboBox.FlatStyle = FlatStyle.Popup;
-            trueChoiceComboBox.Font = new Font("Unispace", 11.25F, FontStyle.Bold);
+            trueChoiceComboBox.Font = new Font("Microsoft Sans Serif", 11.25F, FontStyle.Bold);
             trueChoiceComboBox.ForeColor = Color.White;
             trueChoiceComboBox.FormattingEnabled = true;
-            trueChoiceComboBox.Location = new Point(10, 382);
-            trueChoiceComboBox.Margin = new Padding(10, 8, 4, 0);
+            trueChoiceComboBox.Location = new Point(11, 506);
+            trueChoiceComboBox.Margin = new Padding(11, 11, 5, 0);
             trueChoiceComboBox.Name = "trueChoiceComboBox";
-            trueChoiceComboBox.Size = new Size(244, 26);
+            trueChoiceComboBox.Size = new Size(278, 32);
             trueChoiceComboBox.TabIndex = 9;
             // 
             // screenPanel
@@ -209,11 +213,11 @@
             screenPanel.Controls.Add(infoTextBox);
             screenPanel.Dock = DockStyle.Fill;
             screenPanel.ForeColor = Color.FromArgb(20, 181, 5);
-            screenPanel.Location = new Point(10, 42);
-            screenPanel.Margin = new Padding(10, 8, 10, 0);
+            screenPanel.Location = new Point(11, 56);
+            screenPanel.Margin = new Padding(11, 11, 11, 0);
             screenPanel.Name = "screenPanel";
             mainLayoutPanel.SetRowSpan(screenPanel, 8);
-            screenPanel.Size = new Size(502, 264);
+            screenPanel.Size = new Size(572, 349);
             screenPanel.TabIndex = 10;
             // 
             // infoTextBox
@@ -222,26 +226,43 @@
             infoTextBox.BorderStyle = BorderStyle.None;
             infoTextBox.Font = new Font("LCD5x8H", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 204);
             infoTextBox.ForeColor = Color.FromArgb(20, 181, 5);
-            infoTextBox.Location = new Point(17, 20);
-            infoTextBox.Margin = new Padding(20);
+            infoTextBox.Location = new Point(19, 27);
+            infoTextBox.Margin = new Padding(23, 27, 23, 27);
             infoTextBox.Multiline = true;
             infoTextBox.Name = "infoTextBox";
             infoTextBox.ReadOnly = true;
-            infoTextBox.Size = new Size(461, 220);
+            infoTextBox.Size = new Size(527, 293);
             infoTextBox.TabIndex = 0;
+            // 
+            // autoModeButton
+            // 
+            autoModeButton.BackColor = Color.FromArgb(110, 110, 100);
+            mainLayoutPanel.SetColumnSpan(autoModeButton, 6);
+            autoModeButton.Dock = DockStyle.Fill;
+            autoModeButton.FlatAppearance.BorderSize = 0;
+            autoModeButton.FlatStyle = FlatStyle.Popup;
+            autoModeButton.Font = new Font("Microsoft Yi Baiti", 12F);
+            autoModeButton.ForeColor = Color.White;
+            autoModeButton.Location = new Point(299, 461);
+            autoModeButton.Margin = new Padding(5, 11, 11, 0);
+            autoModeButton.Name = "autoModeButton";
+            autoModeButton.Size = new Size(284, 34);
+            autoModeButton.TabIndex = 11;
+            autoModeButton.Text = "Подобрать автоматический";
+            autoModeButton.UseVisualStyleBackColor = false;
+            autoModeButton.Click += autoModeButton_Click;
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(10, 10, 10);
-            ClientSize = new Size(522, 449);
+            ClientSize = new Size(594, 588);
             Controls.Add(mainLayoutPanel);
-            Margin = new Padding(4, 3, 4, 3);
-            MaximumSize = new Size(538, 488);
-            MinimumSize = new Size(538, 488);
+            Margin = new Padding(5, 4, 5, 4);
+            MaximumSize = new Size(612, 635);
+            MinimumSize = new Size(612, 635);
             Name = "Form1";
-            Text = "AutoCheckZapret";
             mainLayoutPanel.ResumeLayout(false);
             screenPanel.ResumeLayout(false);
             screenPanel.PerformLayout();
@@ -260,5 +281,6 @@
         private ComboBox trueChoiceComboBox;
         private Panel screenPanel;
         private TextBox infoTextBox;
+        private Button autoModeButton;
     }
 }

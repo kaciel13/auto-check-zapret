@@ -14,9 +14,13 @@ namespace auto_check_zapret
 
         public Form1()
         {
-            
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            string versionString = version.ToString();
+
+            this.Text = "AutoCheckZapret v" + versionString.Substring(0, versionString.ToString().Length - 2);
+
             fontManager.InstallCustomFont();
-            
+
             InitializeComponent();
             progressBar.Value = 0;
             TesterModuleEnabe(false);
@@ -27,7 +31,7 @@ namespace auto_check_zapret
 
 
 
- 
+
 
         private async void LoadZapretVersions()
         {
@@ -107,9 +111,13 @@ namespace auto_check_zapret
                     removeZapretButton.Enabled = true;
                     removeZapretButton.BackColor = Color.FromArgb(110, 110, 100);
                     removeZapretButton.ForeColor = Color.White;
+                    autoModeButton.Enabled = true;
+                    autoModeButton.BackColor = Color.FromArgb(110, 110, 100);
+                    autoModeButton.ForeColor = Color.White;
 
                     downloadButton.BackColor = Color.FromArgb(90, 90, 85); // Цвет фона
-                    downloadButton.ForeColor = Color.FromArgb(100,100,100); // Цвет текста
+                    downloadButton.ForeColor = Color.FromArgb(100, 100, 100); // Цвет текста
+
 
 
                 }
@@ -122,7 +130,7 @@ namespace auto_check_zapret
                     downloadButton.Text = "Установить";
                     TesterModuleEnabe(false);
                 }
-                
+
             }
         }
 
@@ -146,7 +154,7 @@ namespace auto_check_zapret
 
             await parser.DownloadAndExtractAsync(version, downloadUrl, infoTextBox, progressBar);
 
-            
+
             choiceVersionComboBox.SelectedIndex = -1;
             choiceVersionComboBox.SelectedIndex = index;
             infoTextBox.AppendText($"Скачивание завершено" + Environment.NewLine);
@@ -208,6 +216,7 @@ namespace auto_check_zapret
             zapretInstallButton.Enabled = enabel;
             startTestButton.Enabled = enabel;
             trueChoiceComboBox.Enabled = enabel;
+            autoModeButton.Enabled = enabel;
 
             if (enabel)
             {
@@ -216,11 +225,13 @@ namespace auto_check_zapret
                 zapretInstallButton.BackColor = Color.FromArgb(110, 110, 100);
                 startTestButton.BackColor = Color.FromArgb(110, 110, 100);
                 trueChoiceComboBox.BackColor = Color.FromArgb(110, 110, 100);
+                autoModeButton.BackColor = Color.FromArgb(110, 110, 100);
 
                 removeZapretButton.ForeColor = Color.White;
                 zapretInstallButton.ForeColor = Color.White;
                 startTestButton.ForeColor = Color.White;
                 trueChoiceComboBox.ForeColor = Color.White;
+                autoModeButton.ForeColor = Color.White;
             }
             else
             {
@@ -229,12 +240,27 @@ namespace auto_check_zapret
                 zapretInstallButton.BackColor = Color.FromArgb(90, 90, 85);
                 startTestButton.BackColor = Color.FromArgb(90, 90, 85);
                 trueChoiceComboBox.BackColor = Color.FromArgb(90, 90, 85);
+                autoModeButton.BackColor = Color.FromArgb(90, 90, 85);
 
                 removeZapretButton.ForeColor = Color.FromArgb(100, 100, 100);
                 zapretInstallButton.ForeColor = Color.FromArgb(100, 100, 100);
                 startTestButton.ForeColor = Color.FromArgb(100, 100, 100);
                 trueChoiceComboBox.ForeColor = Color.FromArgb(100, 100, 100);
+                autoModeButton.ForeColor = Color.FromArgb(90, 90, 85);
             }
+
+        }
+
+        private async void autoModeButton_Click(object sender, EventArgs e)
+        {
+            choiceVersionComboBox.Enabled = false;
+            BypassTester tester = new BypassTester(infoTextBox, progressBar);
+            string version = choiceVersionComboBox.Text.Replace("Zapret ", "");
+            string path = Path.Combine("zaprets", $"zapret-discord-youtube-{version}");
+            TesterModuleEnabe(false);
+            List<int> trueChoice = await tester.BypassTest(path, version, true);
+
+
 
         }
     }

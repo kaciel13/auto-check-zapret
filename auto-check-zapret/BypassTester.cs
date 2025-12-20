@@ -39,7 +39,7 @@ namespace auto_check_zapret
 
 
 
-        public async Task<List<int>> BypassTest(string path, string version)
+        public async Task<List<int>> BypassTest(string path, string version, bool autoMode = false)
         {
             progress.Value = 0;
             try
@@ -59,7 +59,7 @@ namespace auto_check_zapret
             try
             {
                 Stopwatch timer = new Stopwatch();
-                info.AppendText($"Запускаю тестирование..." + Environment.NewLine);
+                info.AppendText($"Запускаю тестирование... Auto mode: {autoMode}" + Environment.NewLine);
                 timer.Start();
                 progress.Value = 5;
                 ConnectTester connectTester = new ConnectTester(info);
@@ -71,8 +71,14 @@ namespace auto_check_zapret
                 {
              
                     zapretService.BypassStart(path, i);
+                    
                     if (await connectTester.TestConnections())
                     {
+                        if(autoMode == true) {
+                            info.AppendText($"Тестирование заверешено. Найден рабочий обход №{i}");
+                            progress.Value = 100;
+                            return trueChoice;
+                        }
                         trueChoice.Add(i);
                     };
                     zapretService.ZapretRemove(path, version);
