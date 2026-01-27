@@ -15,11 +15,11 @@ namespace auto_check_zapret
             "1.6.5",
             "1.6.6",
             "1.7.1",
-            "1.7.2"
         };
 
         private List<string> newVersions = new List<string>
         {
+            "1.7.2",
             "1.7.2b",
             "1.8.0",
             "1.8.1",
@@ -28,7 +28,10 @@ namespace auto_check_zapret
             "1.8.4",
             "1.8.5",
             "1.9.0",
-            "1.9.0b"
+            "1.9.0b",
+            "1.9.1",
+            "1.9.2",
+            "1.9.3",
         };
 
         public string Check(string version)
