@@ -59,15 +59,5 @@ namespace auto_check_zapret.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Поиск локализованного ресурса типа System.Byte[].
-        /// </summary>
-        internal static byte[] LCD5x8HRU {
-            get {
-                object obj = ResourceManager.GetObject("LCD5x8HRU", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }

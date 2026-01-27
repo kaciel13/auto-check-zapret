@@ -224,7 +224,7 @@
             // 
             infoTextBox.BackColor = Color.FromArgb(28, 38, 27);
             infoTextBox.BorderStyle = BorderStyle.None;
-            infoTextBox.Font = new Font("LCD5x8H", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 204);
+            infoTextBox.Font = new Font("Courier New", 7.8F, FontStyle.Bold, GraphicsUnit.Point, 204);
             infoTextBox.ForeColor = Color.FromArgb(20, 181, 5);
             infoTextBox.Location = new Point(19, 27);
             infoTextBox.Margin = new Padding(23, 27, 23, 27);
