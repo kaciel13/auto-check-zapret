@@ -10,14 +10,15 @@ namespace auto_check_zapret
     {
         Dictionary<string, string> versions;
         ZapretParser parser = new ZapretParser();
-
+        Updater updater = new Updater();
 
         public Form1()
         {
+            updater.CheckAndUpdate();
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             string versionString = version.ToString();
             this.Text = "AutoCheckZapret v" + versionString.Substring(0, versionString.ToString().Length - 2);
-
+            
       
 
             InitializeComponent();

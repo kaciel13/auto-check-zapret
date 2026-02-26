@@ -40,6 +40,7 @@ public class ZapretParser
             for (int i = 0; i < versionNodes.Count; i++)
             {
                 var tag = versionNodes[i].InnerText.Trim(); // Получаем тег
+
                 var link = "https://github.com" + downloadNodes[i].GetAttributeValue("href", ""); // Получаем ссылку на архив
 
                 if (!releases.ContainsKey(tag))

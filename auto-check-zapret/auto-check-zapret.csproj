@@ -11,6 +11,7 @@
     <StartupObject></StartupObject>
     <NuGetAuditLevel>low</NuGetAuditLevel>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
