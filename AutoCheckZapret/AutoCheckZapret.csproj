@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+
+	<AppName>Auto Check Zapret</AppName>
+	<Version>2.0.0</Version>
+
+	<AssemblyVersion>$(Version)</AssemblyVersion>
+	<FileVersion>$(Version)</FileVersion>
+	<AssemblyName>$(AppName) $(Version)</AssemblyName>
+	<Copyright>kaciel13 x EdgeFirewalk (с) 2026</Copyright>
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>AppName</_Parameter1>
+      <_Parameter2>$(AppName)</_Parameter2>
+	</AssemblyAttribute>	
+  </ItemGroup>
+
+</Project>
