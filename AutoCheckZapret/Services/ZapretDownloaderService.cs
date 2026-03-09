@@ -43,7 +43,7 @@ namespace AutoCheckZapret.Services
                 // Получаем ссылки на скачивание версий
                 HtmlNodeCollection downloadNodes = document.DocumentNode.SelectNodes("//li/a[contains(@href, 'zip')]");
 
-                // Если не нашли версий, значит они закончились и парсинг можно прекращать
+                // Если не нашли версий на текущей странице, значит страницы и версии закончились и парсинг можно прекращать
                 if (versionsNodes == null || downloadNodes == null) { break; }
 
                 for (int i = 0; i < versionsNodes.Count; i++)
