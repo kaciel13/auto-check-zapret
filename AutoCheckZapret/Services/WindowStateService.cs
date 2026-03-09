@@ -9,16 +9,14 @@ namespace AutoCheckZapret.Services
     public class WindowStateService
     {
         private WindowState _windowState = Application.Current.MainWindow.WindowState;
-        private MainWindow _mainWindow;
 
         /// <summary>
         /// Конструктор
         /// </summary>
-        public WindowStateService(MainWindow window)
+        public WindowStateService()
         {
             // Начальные настройки можно сделать здесь
             Application.Current.MainWindow.WindowState = _windowState;
-            _mainWindow = window;
         }
 
         /// <summary>
