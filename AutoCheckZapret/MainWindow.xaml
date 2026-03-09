@@ -5,13 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AutoCheckZapret"
         mc:Ignorable="d"
-        Title="AutoCheckZapret" Height="800" Width="720" MinHeight="500" MinWidth="430" Background="#FFD6D6D6" ResizeMode="CanResize" WindowStyle="None" AllowsTransparency="True">
+        Title="AutoCheckZapret" Height="800" Width="720" MinHeight="500" MinWidth="430" Background="#FFD6D6D6" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" AllowsTransparency="False">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="50" 
                   CornerRadius="0" 
                   GlassFrameThickness="0" 
                   ResizeBorderThickness="5,5,5,5"
-                      />
+                  UseAeroCaptionButtons="True"/>
     </WindowChrome.WindowChrome>
     <Grid x:Name="MainGrid" AllowDrop="False">
         <Grid.ColumnDefinitions>
