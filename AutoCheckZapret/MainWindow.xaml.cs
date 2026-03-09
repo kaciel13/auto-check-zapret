@@ -66,10 +66,5 @@ namespace AutoCheckZapret
         {
             _windowStateService.ToggleFullscreen();
         }
-
-        private void DragWindow(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            _windowStateService.DragWindow();
-        }
     }
 }

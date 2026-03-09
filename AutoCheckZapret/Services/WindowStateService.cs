@@ -56,18 +56,6 @@ namespace AutoCheckZapret.Services
         }
 
         /// <summary>
-        /// Перетаскивает окно при нажатой левой кнопке мыши.
-        /// </summary>
-        public void DragWindow()
-        {
-            if (Mouse.LeftButton == MouseButtonState.Pressed)
-            {
-                // Запускаем перемещение окна
-                _mainWindow.DragMove();
-            }
-        }
-
-        /// <summary>
         /// Изменяет состояние главного окна приложения.
         /// </summary>
         /// <param name="windowState">Новое состояние окна.</param>
