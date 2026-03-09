@@ -11,7 +11,8 @@ namespace AutoCheckZapret
     public partial class MainWindow : Window
     {
         private readonly ZapretDownloaderService _downloaderService;
-
+        private readonly WindowStateService _windowStateService;
+   
         /// <summary>
         /// Конструктор главного окна приложения
         /// </summary>
@@ -22,12 +23,21 @@ namespace AutoCheckZapret
             Assembly assembly = Assembly.GetExecutingAssembly();
             AssemblyName assemblyName = assembly.GetName();
             Version version = assemblyName.Version!;
-
+            
             // В конце используем Build, потому что в .csproj используем вид Major.Minor.Feature, а не Major.Minor.Feature.Build
             // А VS определяет последнюю цифру как Build
-            Title = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
+            lbTitle.Content = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
 
             _downloaderService = new ZapretDownloaderService();
+
+            // Инициализируем сервис с передачей ссылок на элементы
+            _windowStateService = new WindowStateService(
+                this,
+                MainGrid,
+                DragHeader,
+                btnToggleFullscreen
+            );
+
 
             FillZapretVersionsComboBox();
         }
@@ -48,6 +58,21 @@ namespace AutoCheckZapret
             // Эти данные будут сохраняться в файлике рядом с прогой ACZ
             ZapretVersionsComboBox.SelectedIndex = 0;
             ZapretVersionsComboBox.IsEnabled = true;
+        }
+
+        private void btnCloseWindow_Click(object sender, RoutedEventArgs e)
+        {
+            _windowStateService.ShutDownApplication();
+        }
+
+        private void btnMinimizeWindow_Click(object sender, RoutedEventArgs e)
+        {
+            _windowStateService.MinimizeWindow();
+        }
+
+        private void btnToggleFullscreen_Click(object sender, RoutedEventArgs e)
+        {
+            _windowStateService.ToggleFullscreen();
         }
     }
 }

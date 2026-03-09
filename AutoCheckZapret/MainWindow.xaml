@@ -5,8 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AutoCheckZapret"
         mc:Ignorable="d"
-        Title="AutoCheckZapret" Height="800" Width="720" MinHeight="500" MinWidth="430" Background="#FFD6D6D6" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanMinimize">
-    <Grid>
+        Title="AutoCheckZapret" Height="800" Width="720" MinHeight="500" MinWidth="430" Background="#FFD6D6D6" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" AllowsTransparency="False">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="50" 
+                  CornerRadius="0" 
+                  GlassFrameThickness="0" 
+                  ResizeBorderThickness="5,5,5,5"
+                  UseAeroCaptionButtons="True"/>
+    </WindowChrome.WindowChrome>
+    <Grid x:Name="MainGrid" AllowDrop="False">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="11*"/>
             <ColumnDefinition Width="710*"/>
@@ -16,24 +23,22 @@
             <RowDefinition Height="59*"/>
             <RowDefinition Height="675*"/>
         </Grid.RowDefinitions>
-        <Border Background="#FF8B8A8A" MinHeight="50" Height="50" VerticalAlignment="Center" Padding="10,5,10,5" Grid.ColumnSpan="2">
-            <Grid>
+        <Border x:Name="DragHeader" Background="#FF8B8A8A" MinHeight="50" Height="50" VerticalAlignment="Center" Padding="10,5,10,5" Grid.ColumnSpan="2" >
+            <Grid ScrollViewer.VerticalScrollBarVisibility="Disabled">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-
-
                 </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" ScrollViewer.VerticalScrollBarVisibility="Disabled" >
                     <Rectangle Fill="#FFD84343" Width="36" Height="36" Margin="0,0,5,0"/>
-                    <Label VerticalAlignment="Center">AutoCheckZapret v2.0.0</Label>
+                    <Label x:Name="lbTitle" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Width="34" Height="34" Content="0" Margin="0,0,5,0" />
-                    <Button Width="34" Height="34" Content="_" Margin="0,0,5,0" />
-                    <Button Width="34" Height="34" Content="X"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="btnMinimizeWindow" Width="34" Height="34" Content="_" Margin="0,0,5,0" Click="btnMinimizeWindow_Click" />
+                    <Button x:Name="btnToggleFullscreen" Width="34" Height="34" Content="☐" Margin="0,0,5,0" Click="btnToggleFullscreen_Click" />
+                    <Button x:Name="btnCloseWindow" Width="34" Height="34" Content="X" Click="btnCloseWindow_Click"/>
                 </StackPanel>
             </Grid>
         </Border>
