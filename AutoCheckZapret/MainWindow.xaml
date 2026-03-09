@@ -49,7 +49,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0" SelectionChanged="ComboBox_SelectionChanged" Height="44" MinWidth="44" MinHeight="44">
+                    <ComboBox x:Name="ZapretVersionsComboBox" Grid.Column="0" Height="44" MinWidth="44" MinHeight="44" IsEnabled="False">
                         <ComboBox.Items>
                             <TextBlock Text="Инпут"/>
                         </ComboBox.Items>
