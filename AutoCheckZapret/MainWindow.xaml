@@ -10,9 +10,10 @@
         <WindowChrome CaptionHeight="50" 
                   CornerRadius="0" 
                   GlassFrameThickness="0" 
-                  ResizeBorderThickness="5"/>
+                  ResizeBorderThickness="5,5,5,5"
+                      />
     </WindowChrome.WindowChrome>
-    <Grid AllowDrop="False">
+    <Grid x:Name="MainGrid" AllowDrop="False">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="11*"/>
             <ColumnDefinition Width="710*"/>
@@ -22,7 +23,7 @@
             <RowDefinition Height="59*"/>
             <RowDefinition Height="675*"/>
         </Grid.RowDefinitions>
-        <Border Background="#FF8B8A8A" MinHeight="50" Height="50" VerticalAlignment="Center" Padding="10,5,10,5" Grid.ColumnSpan="2" x:Name="DragHeader" MouseDown="DragWindow">
+        <Border x:Name="DragHeader" Background="#FF8B8A8A" MinHeight="50" Height="50" VerticalAlignment="Center" Padding="10,5,10,5" Grid.ColumnSpan="2" >
             <Grid ScrollViewer.VerticalScrollBarVisibility="Disabled">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

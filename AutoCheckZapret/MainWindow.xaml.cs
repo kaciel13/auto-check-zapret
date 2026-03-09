@@ -29,8 +29,16 @@ namespace AutoCheckZapret
             lbTitle.Content = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
 
             _downloaderService = new ZapretDownloaderService();
-            _windowStateService = new WindowStateService(); // Передаем главное MainWindow для перетаскивания
- 
+
+            // Инициализируем сервис с передачей ссылок на элементы
+            _windowStateService = new WindowStateService(
+                this,
+                MainGrid,
+                DragHeader,
+                btnToggleFullscreen
+            );
+
+
             FillZapretVersionsComboBox();
         }
 

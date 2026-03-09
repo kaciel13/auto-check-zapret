@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-using System.Windows.Input;
+using System.Windows.Controls;
 
 namespace AutoCheckZapret.Services
 {
@@ -8,15 +8,33 @@ namespace AutoCheckZapret.Services
     /// </summary>
     public class WindowStateService
     {
-        private WindowState _windowState = Application.Current.MainWindow.WindowState;
+        private Window _window;
+        private FrameworkElement _mainGrid;
+        private FrameworkElement _dragHeader;
+        private Button _toggleFullscreenButton;
+
+        public WindowState WindowState { get; private set; }
 
         /// <summary>
-        /// Конструктор
+        /// Конструктор с передачей необходимых элементов
         /// </summary>
-        public WindowStateService()
+        public WindowStateService(Window window, FrameworkElement mainGrid,
+                                 FrameworkElement dragHeader, Button toggleFullscreenButton)
         {
-            // Начальные настройки можно сделать здесь
-            Application.Current.MainWindow.WindowState = _windowState;
+            _window = window;
+            _mainGrid = mainGrid;
+            _dragHeader = dragHeader;
+            _toggleFullscreenButton = toggleFullscreenButton;
+            WindowState = window.WindowState;
+
+            // Подписываемся на изменение состояния окна
+            _window.StateChanged += Window_StateChanged;
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            WindowState = _window.WindowState;
+            UpdateMaximizedState(WindowState == WindowState.Maximized);
         }
 
         /// <summary>
@@ -32,8 +50,7 @@ namespace AutoCheckZapret.Services
         /// </summary>
         public void MinimizeWindow()
         {
-            _windowState = WindowState.Minimized;
-            ChangeState(_windowState);
+            _window.WindowState = WindowState.Minimized;
         }
 
         /// <summary>
@@ -41,25 +58,47 @@ namespace AutoCheckZapret.Services
         /// </summary>
         public void ToggleFullscreen()
         {
-            if (_windowState == WindowState.Normal)
+            if (_window.WindowState == WindowState.Normal)
             {
-                _windowState = WindowState.Maximized;
-                ChangeState(_windowState);
+                _window.WindowState = WindowState.Maximized;
             }
             else
             {
-                _windowState = WindowState.Normal;
-                ChangeState(_windowState);
+                _window.WindowState = WindowState.Normal;
             }
         }
 
         /// <summary>
-        /// Изменяет состояние главного окна приложения.
+        /// Обновляет отступы при максимизации
         /// </summary>
-        /// <param name="windowState">Новое состояние окна.</param>
-        private void ChangeState(WindowState windowState)
+        private void UpdateMaximizedState(bool isMaximized)
         {
-            Application.Current.MainWindow.WindowState = windowState;
+            if (_mainGrid == null || _dragHeader == null) return;
+
+            if (isMaximized)
+            {
+                // Получаем размер рабочей области для корректных отступов
+                var workingArea = SystemParameters.WorkArea;
+                
+
+                _mainGrid.Margin = new Thickness(7);
+                _dragHeader.Margin = new Thickness(0);
+
+                if (_toggleFullscreenButton != null)
+                {
+                    _toggleFullscreenButton.Content = "❐"; // Иконка восстановления
+                }
+            }
+            else
+            {
+                _mainGrid.Margin = new Thickness(0);
+                _dragHeader.Margin = new Thickness(0);
+
+                if (_toggleFullscreenButton != null)
+                {
+                    _toggleFullscreenButton.Content = "☐"; // Иконка разворачивания
+                }
+            }
         }
     }
 }
