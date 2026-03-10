@@ -1,0 +1,21 @@
+﻿using AutoCheckZapret.ViewModels;
+using System.Windows;
+
+namespace AutoCheckZapret
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {  
+        /// <summary>
+        /// Конструктор главного окна приложения
+        /// </summary>
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            DataContext = new MainViewModel();
+        }
+    }
+}

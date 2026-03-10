@@ -32,13 +32,13 @@
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" ScrollViewer.VerticalScrollBarVisibility="Disabled" >
                     <Rectangle Fill="#FFD84343" Width="36" Height="36" Margin="0,0,5,0"/>
-                    <Label x:Name="lbTitle" VerticalAlignment="Center"/>
+                    <Label x:Name="lbTitle" VerticalAlignment="Center" Content="{Binding AppNameWithVersion}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button x:Name="btnMinimizeWindow" Width="34" Height="34" Content="_" Margin="0,0,5,0" Click="btnMinimizeWindow_Click" />
-                    <Button x:Name="btnToggleFullscreen" Width="34" Height="34" Content="☐" Margin="0,0,5,0" Click="btnToggleFullscreen_Click" />
-                    <Button x:Name="btnCloseWindow" Width="34" Height="34" Content="X" Click="btnCloseWindow_Click"/>
+                    <Button x:Name="btnMinimizeWindow" Width="34" Height="34" Content="_" Margin="0,0,5,0" Command="{Binding MinimizeWindowCommand}"/>
+                    <Button x:Name="btnToggleFullscreen" Width="34" Height="34" Content="☐" Margin="0,0,5,0" />
+                    <Button x:Name="btnCloseWindow" Width="34" Height="34" Content="X" Command="{Binding ShutdownApplicationCommand}"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -54,20 +54,30 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="ZapretVersionsComboBox" Grid.Column="0" Height="44" MinWidth="44" MinHeight="44" IsEnabled="False">
-                        <ComboBox.Items>
-                            <TextBlock Text="Инпут"/>
-                        </ComboBox.Items>
+                    <ComboBox x:Name="cbxZapretVersions" 
+                              Grid.Column="0" 
+                              Height="44" 
+                              MinWidth="44" 
+                              MinHeight="44" 
+                              ItemsSource="{Binding ZapretVersions}" 
+                              SelectedItem="{Binding SelectedZapretVersion}" 
+                              IsEnabled="{Binding HasFetchedZapretVersions}"
+                              >
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Number}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
                     </ComboBox>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5,0,0,0">
-                        <Button Content="->" Width="44" Height="44" Margin="0,0,5,0"/>
-                        <Button Content="X" Width="44" Height="44"/>
+                        <Button x:Name="btnDownloadZapretVersion" Content="->" Width="44" Height="44" Margin="0,0,5,0" IsEnabled="{Binding CanWorkWithZapretVersion}" Command="{Binding DownloadZapretVersionCommand}"/>
+                        <Button x:Name="btnDeleteZapretVersion" Content="X" Width="44" Height="44" IsEnabled="{Binding CanWorkWithZapretVersion}"/>
                     </StackPanel>
                 </Grid>
 
-                <TextBox  Grid.Row="1" Text="Консоль" Margin="0,10,0,10" Foreground="#FFDAD8D8" Background="#FF060606" CaretBrush="Gainsboro"/>
+                <TextBox x:Name="txtBxConsole" Grid.Row="1" Text="Консоль" Margin="0,10,0,10" Foreground="#FFDAD8D8" Background="#FF060606" CaretBrush="Gainsboro" IsReadOnly="True"/>
 
-                <Button Grid.Row="2" Content="Подобрать zapret" Margin="0,0,0,10" Height="37" BorderThickness="0,0,0,0" MinWidth="44" MinHeight="44" MaxHeight="44" Background="#FFABABAB" BorderBrush="#FF525252"/>
+                <Button Grid.Row="2" Content="{Binding ChooseBypassMethodButtonContent}" Margin="0,0,0,10" Height="37" BorderThickness="0,0,0,0" MinWidth="44" MinHeight="44" MaxHeight="44" Background="#FFABABAB" BorderBrush="#FF525252" IsEnabled="{Binding CanWorkWithZapretVersion}"/>
             </Grid>
         </Border>
     </Grid>
