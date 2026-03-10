@@ -13,6 +13,5 @@ namespace AutoCheckZapret.Models
     public class ApplicationData
     {
         // Последняя выбранная версия Zapret
-        // Скачанные версии Zapret
     }
 }
