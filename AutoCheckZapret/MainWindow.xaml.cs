@@ -10,7 +10,9 @@ namespace AutoCheckZapret
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly ZapretDownloaderService _downloaderService;
+        private List<ZapretVersion> _zapretVersions;
+
+        private readonly ZapretDownloaderService _zapretDownloaderService;
         private readonly WindowStateService _windowStateService;
    
         /// <summary>
@@ -28,7 +30,7 @@ namespace AutoCheckZapret
             // А VS определяет последнюю цифру как Build
             lbTitle.Content = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
 
-            _downloaderService = new ZapretDownloaderService();
+            _zapretDownloaderService = new ZapretDownloaderService();
 
             // Инициализируем сервис с передачей ссылок на элементы
             _windowStateService = new WindowStateService(
@@ -38,31 +40,7 @@ namespace AutoCheckZapret
                 btnToggleFullscreen
             );
 
-
             FillZapretVersionsComboBox();
-        }
-
-        private async void FillZapretVersionsComboBox()
-        {
-            List<ZapretVersion> zapretVersions = await _downloaderService.FetchAvailableVersions();
-
-            ZapretVersionsComboBox.IsEnabled = false;
-            ZapretVersionsComboBox.Items.Clear();
-
-            foreach (ZapretVersion version in zapretVersions)
-            {
-                ZapretVersionsComboBox.Items.Add(version.Number);
-            }
-
-            // TODO: В дальнейшем нужно будет устанавливать индекс в зависимости от того, какую версию пользователь сам себе ставил в последний раз.
-            // Эти данные будут сохраняться в файлике рядом с прогой ACZ
-            ZapretVersionsComboBox.SelectedIndex = 0;
-            ZapretVersionsComboBox.IsEnabled = true;
-        }
-
-        private void btnCloseWindow_Click(object sender, RoutedEventArgs e)
-        {
-            _windowStateService.ShutDownApplication();
         }
 
         private void btnMinimizeWindow_Click(object sender, RoutedEventArgs e)
@@ -73,6 +51,61 @@ namespace AutoCheckZapret
         private void btnToggleFullscreen_Click(object sender, RoutedEventArgs e)
         {
             _windowStateService.ToggleFullscreen();
+        }
+
+        private void btnCloseWindow_Click(object sender, RoutedEventArgs e)
+        {
+            _windowStateService.ShutDownApplication();
+        }
+
+        private async void FillZapretVersionsComboBox()
+        {
+            btnDownloadZapretVersion.IsEnabled = false;
+            btnDeleteZapretVersion.IsEnabled = false;
+
+            _zapretVersions = await _zapretDownloaderService.FetchAvailableVersions();
+
+            cbxZapretVersions.IsEnabled = false;
+            cbxZapretVersions.Items.Clear();
+
+            foreach (ZapretVersion version in _zapretVersions)
+            {
+                cbxZapretVersions.Items.Add(version.Number);
+            }
+
+            // TODO: В дальнейшем нужно будет устанавливать индекс в зависимости от того, какую версию пользователь сам себе ставил в последний раз.
+            // Эти данные будут сохраняться в файлике рядом с прогой ACZ
+            cbxZapretVersions.SelectedIndex = 0;
+            cbxZapretVersions.IsEnabled = true;
+
+            btnDownloadZapretVersion.IsEnabled = true;
+            btnDeleteZapretVersion.IsEnabled = true;
+        }
+
+        private async void btnDownloadZapretVersion_Click(object sender, RoutedEventArgs e)
+        {
+            cbxZapretVersions.IsEnabled = false;
+            btnDownloadZapretVersion.IsEnabled = false;
+            btnDeleteZapretVersion.IsEnabled = false;
+
+            ZapretVersion versionToDownload = _zapretVersions[cbxZapretVersions.SelectedIndex];
+
+            bool isDownloaded = await _zapretDownloaderService.DownloadZapretVersion(versionToDownload);
+            if (!isDownloaded)
+            {
+                // TODO: В консоль нужно что-то выводить, собственно, по поводу возникшей при скачивании ошибки
+                MessageBox.Show($"Ошибка скачивания Zapret версии {versionToDownload.Number}. Смотрите детали ошибки в консоли программы.", "Ошибка скачивания версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                cbxZapretVersions.IsEnabled = true;
+                btnDownloadZapretVersion.IsEnabled = true;
+                btnDeleteZapretVersion.IsEnabled = true;
+
+                return;
+            }
+
+            cbxZapretVersions.IsEnabled = true;
+            btnDownloadZapretVersion.IsEnabled = true;
+            btnDeleteZapretVersion.IsEnabled = true;
         }
     }
 }

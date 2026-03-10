@@ -19,7 +19,7 @@ namespace AutoCheckZapret.Services
         /// Конструктор с передачей необходимых элементов
         /// </summary>
         public WindowStateService(Window window, FrameworkElement mainGrid,
-                                 FrameworkElement dragHeader, Button toggleFullscreenButton)
+                                  FrameworkElement dragHeader, Button toggleFullscreenButton)
         {
             _window = window;
             _mainGrid = mainGrid;
@@ -79,7 +79,6 @@ namespace AutoCheckZapret.Services
             {
                 // Получаем размер рабочей области для корректных отступов
                 var workingArea = SystemParameters.WorkArea;
-                
 
                 _mainGrid.Margin = new Thickness(7);
                 _dragHeader.Margin = new Thickness(0);

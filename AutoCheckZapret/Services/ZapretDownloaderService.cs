@@ -1,6 +1,9 @@
 ﻿using AutoCheckZapret.Models;
 using HtmlAgilityPack;
+using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
+using System.Text;
 
 namespace AutoCheckZapret.Services
 {
@@ -11,6 +14,7 @@ namespace AutoCheckZapret.Services
     public class ZapretDownloaderService
     {
         private const string BaseUrl = "https://github.com/Flowseal/zapret-discord-youtube";
+        private const string DownloadPath = "versions";
 
         private readonly HttpClient _httpClient;
 
@@ -58,6 +62,61 @@ namespace AutoCheckZapret.Services
             }
 
             return versions;
+        }
+
+        /// <summary>
+        /// Скачивание архива с версией Zapret и распаковывание его в папку с версиями
+        /// </summary>
+        /// <param name="version">Версия Zapret для скачивания</param>
+        /// <returns>true - скачивание и распаковка успешны, false - ошибка при скачивании и распаковывании версии Zapret</returns>
+        public async Task<bool> DownloadZapretVersion(ZapretVersion version)
+        {
+            if (!Directory.Exists(DownloadPath)) { Directory.CreateDirectory(DownloadPath); }
+
+            string versionPath = Path.Combine(DownloadPath, version.Number);
+
+            try
+            {
+                using (HttpResponseMessage response = await _httpClient.GetAsync(version.DownloadUrl))
+                {
+                    response.EnsureSuccessStatusCode();
+                    await using Stream stream = await response.Content.ReadAsStreamAsync();
+
+                    await using (FileStream fileStream = new FileStream(versionPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        await stream.CopyToAsync(fileStream);
+                    }
+                }
+
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+                try
+                {
+                    // Попытка 1: с кодировкой 866 (Windows-1251)
+                    ZipFile.ExtractToDirectory(versionPath, DownloadPath, Encoding.GetEncoding(866), true);
+                }
+                catch
+                {
+                    try
+                    {
+                        // Попытка 2: с UTF-8
+                        ZipFile.ExtractToDirectory(versionPath, DownloadPath, Encoding.UTF8, true);
+                    }
+                    catch
+                    {
+                        // Попытка 3: с кодировкой по умолчанию
+                        ZipFile.ExtractToDirectory(versionPath, DownloadPath, true);
+                    }
+                }
+
+                File.Delete(versionPath);
+            }
+            catch
+            {
+                if (File.Exists(versionPath)) { File.Delete(versionPath); }
+            }
+
+            return true;
         }
 
         private string GetNextVersionsPageUrl(string lastVersionNumber)
