@@ -1,5 +1,6 @@
 ﻿using AutoCheckZapret.Models;
 using HtmlAgilityPack;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -30,9 +31,9 @@ namespace AutoCheckZapret.Services
         /// Получение информации о всех доступных версиях Zapret
         /// </summary>
         /// <returns>Список доступных версий в виде ZapretVersion</returns>
-        public async Task<List<ZapretVersion>> FetchAvailableVersions()
+        public async Task<ObservableCollection<ZapretVersion>> FetchAvailableVersions()
         {
-            List<ZapretVersion> versions = new List<ZapretVersion>();
+            ObservableCollection<ZapretVersion> versions = new ObservableCollection<ZapretVersion>();
             string url = $"{BaseUrl}/tags";
 
             // Проходимся по всем страницам с версиями Zapret
