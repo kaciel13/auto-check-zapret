@@ -272,7 +272,7 @@ namespace AutoCheckZapret.ViewModels
             }
             else
             {
-                MessageBox.Show("Не удалось удалить версию Zapret, т.к. файлы версии открыты или используются в каких-либо процессах", "Ошибка удаления версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не удалось удалить версию Zapret, т.к. файлы версии открыты или используются в каких-либо процессах.", "Ошибка удаления версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
