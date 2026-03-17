@@ -65,6 +65,7 @@ namespace AutoCheckZapret.ViewModels
             {
                 _zapretVersions = value;
                 OnPropertyChanged("ZapretVersions");
+
                 if (value != null) { HasFetchedZapretVersions = true; }
             }
         }
@@ -94,25 +95,57 @@ namespace AutoCheckZapret.ViewModels
             {
                 _selecredZapretVersion = value;
                 OnPropertyChanged("SelectedZapretVersion");
+
                 if (value != null) 
                 {
-                    CanWorkWithZapretVersion = true;
-                    ChooseBypassMethodButtonContent = $"Подобрать обход для Zapret v{value.Number}";
+                    if (_zapretVersionsService.IsZapretVersionDownloaded(value))
+                    {
+                        CanDownloadZapretVersion = false;
+                        CanDeleteOrWorkWithZapretVersion = true;
+                    }
+                    else
+                    {
+                        CanDownloadZapretVersion = true;
+                        CanDeleteOrWorkWithZapretVersion = false;
+                    }
                 }
             }
         }
 
-        private bool _canWorkWithZapretVersion;
+        private bool _canDownloadZapretVersion;
         /// <summary>
-        /// Может ли пользователь взаимодействовать с версией Zapret (скачивать её, удалять, запускать)
+        /// Может ли пользователь нажать кнопку для скачивания версии Zapret
         /// </summary>
-        public bool CanWorkWithZapretVersion
+        public bool CanDownloadZapretVersion
         {
-            get { return _canWorkWithZapretVersion; }
+            get { return _canDownloadZapretVersion; }
             set
             {
-                _canWorkWithZapretVersion = value;
-                OnPropertyChanged("CanWorkWithZapretVersion");
+                _canDownloadZapretVersion = value;
+                OnPropertyChanged("CanDownloadZapretVersion");
+            }
+        }
+
+        private bool _canDeleteOrWorkWithZapretVersion;
+        /// <summary>
+        /// Может ли пользователь удалить версию Zapret или работать с ней
+        /// </summary>
+        public bool CanDeleteOrWorkWithZapretVersion
+        {
+            get { return _canDeleteOrWorkWithZapretVersion; }
+            set
+            {
+                _canDeleteOrWorkWithZapretVersion = value;
+                OnPropertyChanged("CanDeleteOrWorkWithZapretVersion");
+
+                if (value)
+                {
+                    ChooseBypassMethodButtonContent = $"Подобрать обход для Zapret v{SelectedZapretVersion.Number}";
+                }
+                else
+                {
+                    ChooseBypassMethodButtonContent = $"Скачайте Zapret v{SelectedZapretVersion.Number}, чтобы начать работу";
+                }
             }
         }
 
@@ -125,6 +158,18 @@ namespace AutoCheckZapret.ViewModels
             get
             {
                 return _downloadZapretVersionCommand ?? (_downloadZapretVersionCommand = new RelayCommand(DownloadZapretVersion));
+            }
+        }
+
+        private RelayCommand _deleteZapretVersionCommand;
+        /// <summary>
+        /// Команда удаления версии Zapret
+        /// </summary>
+        public RelayCommand DeleteZapretVersionCommand
+        {
+            get
+            {
+                return _deleteZapretVersionCommand ?? (_deleteZapretVersionCommand = new RelayCommand(DeleteZapretVersion));
             }
         }
 
@@ -142,11 +187,15 @@ namespace AutoCheckZapret.ViewModels
             }
         }
 
+        private ZapretVersionsService _zapretVersionsService;
+
         /// <summary>
         /// Конструктор главной ВьюМодели
         /// </summary>
         public MainViewModel()
         {
+            _zapretVersionsService = new ZapretVersionsService();
+
             Assembly assembly = Assembly.GetExecutingAssembly();
             AssemblyName assemblyName = assembly.GetName();
             Version version = assemblyName.Version!;
@@ -175,32 +224,31 @@ namespace AutoCheckZapret.ViewModels
                 PropertyChanged(this, new PropertyChangedEventArgs(prop));
         }
 
-        private void MinimizeWindow(object parameter)
+        private void MinimizeWindow(object param)
         {
             Application.Current.MainWindow.WindowState = WindowState.Minimized;
         }
 
         // TODO: Сделать метод для разворачивания окна на весь экран и обратно
 
-        private void ShutdownApplication(object parameter)
+        private void ShutdownApplication(object param)
         {
             Application.Current.Shutdown();
         }
 
         private async Task FetchAvailableZapretVersions()
         {
-            ZapretDownloaderService zapretDownloaderService = new ZapretDownloaderService();
-            ZapretVersions = await zapretDownloaderService.FetchAvailableVersions();
+            ZapretVersions = await _zapretVersionsService.FetchAvailableVersions();
             // TODO: Вот тут, наверное, нужно сделать проверку какую-то на то, были ли получены версии Запрета
 
             SelectedZapretVersion = ZapretVersions[0];
         }
 
-        private async void DownloadZapretVersion(object parameter)
+        private async void DownloadZapretVersion(object param)
         {
-            CanWorkWithZapretVersion = false;
+            CanDownloadZapretVersion = false;
 
-            ZapretDownloaderService downloaderService = new ZapretDownloaderService();
+            ZapretVersionsService downloaderService = new ZapretVersionsService();
             bool isDownloaded = await downloaderService.DownloadZapretVersion(SelectedZapretVersion);
             if (!isDownloaded)
             {
@@ -208,7 +256,24 @@ namespace AutoCheckZapret.ViewModels
                 MessageBox.Show($"Ошибка скачивания Zapret версии {SelectedZapretVersion.Number}. Смотрите детали ошибки в консоли программы.", "Ошибка скачивания версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            CanWorkWithZapretVersion = true;
+            CanDeleteOrWorkWithZapretVersion = true;
+        }
+
+        private void DeleteZapretVersion(object param)
+        {
+            MessageBoxResult questionResult = MessageBox.Show($"Вы уверены, что хотите удалить Zapret версии {SelectedZapretVersion.Number}?", "Подтверждение удаления версии Zapret", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (questionResult != MessageBoxResult.Yes) { return; }
+
+            bool isVersionDeleted = _zapretVersionsService.DeleteZapretVersion(SelectedZapretVersion);
+            if (isVersionDeleted)
+            {
+                CanDownloadZapretVersion = true;
+                CanDeleteOrWorkWithZapretVersion = false;
+            }
+            else
+            {
+                MessageBox.Show("Не удалось удалить версию Zapret, т.к. файлы версии открыты или используются в каких-либо процессах.", "Ошибка удаления версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

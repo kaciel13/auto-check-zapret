@@ -9,10 +9,10 @@ using System.Text;
 namespace AutoCheckZapret.Services
 {
     /// <summary>
-    /// Сервис для получения информации о доступных версиях
-    /// и скачивания выбранной версии Zapret из официального репозитория
+    /// Сервис для получения информации о доступных версиях Zapret из официального репозитория,
+    /// их скачивания и удаления
     /// </summary>
-    public class ZapretDownloaderService
+    public class ZapretVersionsService
     {
         private const string BaseUrl = "https://github.com/Flowseal/zapret-discord-youtube";
         private const string DownloadPath = "versions";
@@ -22,7 +22,7 @@ namespace AutoCheckZapret.Services
         /// <summary>
         /// Конструктор
         /// </summary>
-        public ZapretDownloaderService()
+        public ZapretVersionsService()
         {
             _httpClient = new HttpClient();
         }
@@ -76,6 +76,9 @@ namespace AutoCheckZapret.Services
 
             string versionPath = Path.Combine(DownloadPath, version.Number);
 
+            // TODO: Отрефакторить скачивание, убрать лишние try...catch
+            // TODO: Переименовывать распакованную папку просто в версию запрета
+
             try
             {
                 using (HttpResponseMessage response = await _httpClient.GetAsync(version.DownloadUrl))
@@ -120,9 +123,69 @@ namespace AutoCheckZapret.Services
             return true;
         }
 
+        /// <summary>
+        /// Удаление папки с выбранной версией Zapret
+        /// </summary>
+        /// <param name="version">Версия Zapret для удаления</param>
+        public bool DeleteZapretVersion(ZapretVersion version)
+        {
+            string versionFolderPath = GetVersionFolderPath(version);
+            if (!Directory.Exists(versionFolderPath)) { return true; }
+
+            try
+            {
+                Directory.Delete(versionFolderPath, true);
+            }
+            catch (IOException ex)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Скачана ли у пользователя выбранная версия Zapret
+        /// </summary>
+        /// <param name="version">Версия Zapret для проверки</param>
+        /// <returns>true - версия скачана, false - версия не скачана</returns>
+        public bool IsZapretVersionDownloaded(ZapretVersion version)
+        {
+            return !string.IsNullOrEmpty(GetVersionFolderPath(version));
+        }
+
+        /// <summary>
+        /// Получить URL страницы с версиями Zapret, идущей после последней версии программы на текущей странице
+        /// </summary>
+        /// <param name="lastVersionNumber">Название последней версии Zapret на текущей странице</param>
         private string GetNextVersionsPageUrl(string lastVersionNumber)
         {
             return $"{BaseUrl}/tags?after={lastVersionNumber}";
+        }
+
+        /// <summary>
+        /// Получить путь до папки с указанной установленной версией Zapret
+        /// </summary>
+        /// <param name="version">Версия Zapret, папку которой нужно найти</param>
+        /// <returns>Путь до папки установленной версии Zapret или пустую строку в случае, если версия не скачана</returns>
+        private string GetVersionFolderPath(ZapretVersion version)
+        {
+            if (!Directory.Exists(DownloadPath)) { return string.Empty; }
+
+            // Использование звёздочек в номере версии нужно, чтобы метод искал совпадение в любом месте названия папки
+            string? versionDirectoryPath = Directory.GetDirectories(DownloadPath, "*", SearchOption.TopDirectoryOnly)
+                                           .Where(dir => Path.GetFileName(dir).Contains(version.Number))
+                                           .Where(dir => Path.GetFileName(dir).EndsWith(version.Number)) // Добавляем точное совпадение окончания номера версии в названии папки
+                                           .FirstOrDefault();
+
+            if (versionDirectoryPath == null)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return versionDirectoryPath;
+            }
         }
     }
 }
