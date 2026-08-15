@@ -5,80 +5,317 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AutoCheckZapret"
         mc:Ignorable="d"
-        Title="AutoCheckZapret" Height="800" Width="720" MinHeight="500" MinWidth="430" Background="#FFD6D6D6" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" AllowsTransparency="False">
-    <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="50" 
-                  CornerRadius="0" 
-                  GlassFrameThickness="0" 
-                  ResizeBorderThickness="5,5,5,5"
-                  UseAeroCaptionButtons="True"/>
-    </WindowChrome.WindowChrome>
-    <Grid x:Name="MainGrid" AllowDrop="False">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="11*"/>
-            <ColumnDefinition Width="710*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="59*"/>
-            <RowDefinition Height="675*"/>
-        </Grid.RowDefinitions>
-        <Border x:Name="DragHeader" Background="#FF8B8A8A" MinHeight="50" Height="50" VerticalAlignment="Center" Padding="10,5,10,5" Grid.ColumnSpan="2" >
-            <Grid ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <StackPanel Grid.Column="0" Orientation="Horizontal" ScrollViewer.VerticalScrollBarVisibility="Disabled" >
-                    <Rectangle Fill="#FFD84343" Width="36" Height="36" Margin="0,0,5,0"/>
-                    <Label x:Name="lbTitle" VerticalAlignment="Center" Content="{Binding AppNameWithVersion}"/>
-                </StackPanel>
+        Title="AutoCheckZapret" Height="800" Width="720" MinHeight="500" MinWidth="430"
+        Background="Transparent" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" AllowsTransparency="False">
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button x:Name="btnMinimizeWindow" Width="34" Height="34" Content="_" Margin="0,0,5,0" Command="{Binding MinimizeWindowCommand}"/>
-                    <Button x:Name="btnToggleFullscreen" Width="34" Height="34" Content="☐" Margin="0,0,5,0" />
-                    <Button x:Name="btnCloseWindow" Width="34" Height="34" Content="X" Command="{Binding ShutdownApplicationCommand}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-        <Border Grid.Row="1" Padding="10,0,10,0" Margin="0,12,0,2" Grid.RowSpan="2" Grid.ColumnSpan="2">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0" Height="44" >
+    <!-- Ресурсы окна: общие стили и эффекты -->
+    <Window.Resources>
+        <!-- Общий эффект тени для кнопок и комбобокса -->
+        <DropShadowEffect x:Key="CommonDropShadow" Color="Black" BlurRadius="4" Opacity="0.25" Direction="-90"/>
+
+        <!-- Базовый стиль для круглых кнопок управления окном (свернуть, развернуть, закрыть) -->
+        <Style x:Key="WindowControlButtonBaseStyle" TargetType="Button">
+            <Setter Property="Background" Value="#222222"/>
+            <Setter Property="Foreground" Value="#FEFEFE"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="100" Background="{TemplateBinding Background}"
+                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#4A4A4A"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Конкретные стили для кнопок управления окном (отличаются только hover-цветом) -->
+        <Style x:Key="MinimizeButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowControlButtonBaseStyle}">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#555555"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MaximizeButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowControlButtonBaseStyle}">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#555555"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowControlButtonBaseStyle}">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#8B3030"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Базовый стиль для функциональных кнопок (скачать, удалить, выбрать метод) -->
+        <Style x:Key="ActionButtonBaseStyle" TargetType="Button">
+            <Setter Property="Background" Value="#303030"/>
+            <Setter Property="Foreground" Value="#FEFEFE"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Effect" Value="{StaticResource CommonDropShadow}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="5" Background="{TemplateBinding Background}"
+                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#242424"/>
+                    <Setter Property="Foreground" Value="#585858"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стили для конкретных функциональных кнопок -->
+        <Style x:Key="DownloadButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#266D39"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DeleteButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#8B3030"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ChooseButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}">
+            <Setter Property="Height" Value="40"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#555555"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стиль для ComboBox (выпадающий список версий) -->
+        <Style x:Key="CustomComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#FEFEFE"/>
+            <Setter Property="Effect" Value="{StaticResource CommonDropShadow}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          Background="#303030"
+                                          BorderBrush="Transparent"
+                                          BorderThickness="0"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Stretch"
+                                          Height="34"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding ItemTemplate}"
+                                          Foreground="#FEFEFE"
+                                          HorizontalContentAlignment="Left"
+                                          VerticalContentAlignment="Center"
+                                          Padding="10,0,0,0">
+                                <ToggleButton.Style>
+                                    <Style TargetType="ToggleButton">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ToggleButton">
+                                                    <Border x:Name="Border"
+                                                            Background="{TemplateBinding Background}"
+                                                            CornerRadius="5"
+                                                            Height="34">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="20"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <ContentPresenter x:Name="ContentSite"
+                                                                              Grid.Column="0"
+                                                                              Content="{TemplateBinding Content}"
+                                                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                                              VerticalAlignment="Center"
+                                                                              HorizontalAlignment="Left"
+                                                                              Margin="10,0,0,0"/>
+                                                            <Path x:Name="Arrow"
+                                                                  Grid.Column="1"
+                                                                  Fill="{TemplateBinding Foreground}"
+                                                                  HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                                        </Grid>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Border" Property="Background" Value="#555555"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter TargetName="Border" Property="Background" Value="#555555"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter TargetName="Arrow" Property="Fill" Value="#585858"/>
+                                                            <Setter Property="Background" Value="#242424"/>
+                                                            <Setter Property="Foreground" Value="#585858"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ToggleButton.Style>
+                            </ToggleButton>
+                            <Popup x:Name="Popup"
+                                   IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Placement="Bottom"
+                                   AllowsTransparency="False"
+                                   Focusable="False">
+                                <Border Background="#404040"
+                                        BorderBrush="#555555"
+                                        BorderThickness="1"
+                                        CornerRadius="0,0,5,5"
+                                        MinWidth="{TemplateBinding ActualWidth}">
+                                    <ScrollViewer>
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Настройка кастомного оформления окна: заголовок высотой 50px, скругленные углы -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="50"
+                      CornerRadius="5"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="5,5,5,5"
+                      UseAeroCaptionButtons="True"/>
+    </WindowChrome.WindowChrome>
+
+    <!-- Основной контейнер с фоном и скруглением -->
+    <Border CornerRadius="5" Background="#222222">
+        <Grid x:Name="MainGrid" AllowDrop="False">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Шапка окна: перетаскивание, заголовок, кнопки управления -->
+            <Border x:Name="DragHeader" Background="#222222" Height="50" VerticalAlignment="Top" Padding="10,5,10,5">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="cbxZapretVersions" 
-                              Grid.Column="0" 
-                              Height="44" 
-                              MinWidth="44" 
-                              MinHeight="44" 
-                              ItemsSource="{Binding ZapretVersions}" 
-                              SelectedItem="{Binding SelectedZapretVersion}" 
-                              IsEnabled="{Binding HasFetchedZapretVersions}"
-                              >
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Path=Number}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5,0,0,0">
-                        <Button x:Name="btnDownloadZapretVersion" Content="->" Width="44" Height="44" Margin="0,0,5,0" IsEnabled="{Binding CanDownloadZapretVersion}" Command="{Binding DownloadZapretVersionCommand}"/>
-                        <Button x:Name="btnDeleteZapretVersion" Content="X" Width="44" Height="44" IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}" Command="{Binding DeleteZapretVersionCommand}"/>
+
+                    <!-- Логотип и название приложения -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Rectangle Fill="#FFD84343" Width="36" Height="36" Margin="0,0,5,0"/>
+                        <Label x:Name="lbTitle" VerticalAlignment="Center" Foreground="#FEFEFE"  Content="{Binding AppNameWithVersion}"/>
+                    </StackPanel>
+
+                    <!-- Кнопки управления окном -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="btnMinimizeWindow" Content="_" Margin="0,0,5,0"
+                                Style="{StaticResource MinimizeButtonStyle}"
+                                Command="{Binding MinimizeWindowCommand}"/>
+                        <Button x:Name="btnToggleFullscreen" Content="☐" Margin="0,0,5,0"
+                                Style="{StaticResource MaximizeButtonStyle}"/>
+                        <Button x:Name="btnCloseWindow" Content="X"
+                                Style="{StaticResource CloseButtonStyle}"
+                                Command="{Binding ShutdownApplicationCommand}"/>
                     </StackPanel>
                 </Grid>
+            </Border>
 
-                <TextBox x:Name="txtBxConsole" Grid.Row="1" Text="Консоль" Margin="0,10,0,10" Foreground="#FFDAD8D8" Background="#FF060606" CaretBrush="Gainsboro" IsReadOnly="True"/>
+            <!-- Основная область контента -->
+            <Border Grid.Row="1" Padding="10,0,10,0" Margin="0,12,0,2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <Button Grid.Row="2" Content="{Binding ChooseBypassMethodButtonContent}" Margin="0,0,0,10" Height="37" BorderThickness="0,0,0,0" MinWidth="44" MinHeight="44" MaxHeight="44" Background="#FFABABAB" BorderBrush="#FF525252" IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"/>
-            </Grid>
-        </Border>
-    </Grid>
+                    <!-- Панель выбора версии и действий -->
+                    <Grid Grid.Row="0" Height="44">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Выпадающий список версий -->
+                        <ComboBox x:Name="cbxZapretVersions"
+                                  Grid.Column="0"
+                                  MinWidth="44"
+                                  ItemsSource="{Binding ZapretVersions}"
+                                  SelectedItem="{Binding SelectedZapretVersion}"
+                                  IsEnabled="{Binding HasFetchedZapretVersions}"
+                                  Style="{StaticResource CustomComboBoxStyle}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Path=Number}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!-- Кнопки скачивания и удаления -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5,0,0,0">
+                            <Button x:Name="btnDownloadZapretVersion" Content="->" Margin="0,0,5,0"
+                                    IsEnabled="{Binding CanDownloadZapretVersion}"
+                                    Command="{Binding DownloadZapretVersionCommand}"
+                                    Style="{StaticResource DownloadButtonStyle}"/>
+                            <Button x:Name="btnDeleteZapretVersion" Content="X"
+                                    IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"
+                                    Command="{Binding DeleteZapretVersionCommand}"
+                                    Style="{StaticResource DeleteButtonStyle}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Консольный вывод -->
+                    <Border Grid.Row="1" CornerRadius="5" Background="#1B1B1B" Margin="0,10,0,10">
+                        <TextBox x:Name="txtBxConsole"  Text="Консоль" 
+                             Foreground="#FEFEFE" Background="Transparent" CaretBrush="Gainsboro" IsReadOnly="True" BorderBrush="Transparent" Padding="14, 7"/>
+                    </Border>
+
+                    <!-- Кнопка выбора метода обхода -->
+                    <Button Grid.Row="2" Content="{Binding ChooseBypassMethodButtonContent}" Margin="0,0,0,10"
+                            IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"
+                            Style="{StaticResource ChooseButtonStyle}"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
 </Window>
