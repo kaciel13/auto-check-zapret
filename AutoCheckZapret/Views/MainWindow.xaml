@@ -164,7 +164,7 @@
                                                                               VerticalAlignment="Center"
                                                                               HorizontalAlignment="Left"
                                                                               Margin="10,0,0,0"/>
-                                                            <Image x:Name="Icon" Grid.Column="1" Source="{StaticResource ToggleIcon}" Height="12" Width="12" Margin="0,3,0,0"/>
+                                                            <Image x:Name="Icon" Grid.Column="1" Source="{StaticResource ToggleIcon}" Height="16" Width="16" Margin="0,3,0,0"/>
                                                         </Grid>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
@@ -247,16 +247,16 @@
                         <Button x:Name="btnMinimizeWindow" Margin="0,0,5,0"
                                 Style="{StaticResource MinimizeButtonStyle}"
                                 Command="{Binding MinimizeWindowCommand}">
-                            <Image Source="{StaticResource ViewOffIcon}" Width="12" Height="12"/>
+                            <Image Source="{StaticResource ViewOffIcon}" Width="10" Height="10"/>
                         </Button>
                         <Button x:Name="btnToggleFullscreen" Margin="0,0,5,0"
                                 Style="{StaticResource MaximizeButtonStyle}">
-                            <Image Source="{StaticResource MaximizeIcon}" Width="12" Height="12"/>
+                            <Image Source="{StaticResource MaximizeIcon}" Width="16" Height="16"/>
                         </Button>
                         <Button x:Name="btnCloseWindow" 
                                 Style="{StaticResource CloseButtonStyle}"
                                 Command="{Binding ShutdownApplicationCommand}">
-                            <Image Source="{StaticResource CloseIcon}" Width="12" Height="12" />
+                            <Image Source="{StaticResource CloseIcon}" Width="15" Height="15" />
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -299,13 +299,13 @@
                                     IsEnabled="{Binding CanDownloadZapretVersion}"
                                     Command="{Binding DownloadZapretVersionCommand}"
                                     Style="{StaticResource DownloadButtonStyle}">
-                                <Image Source="{StaticResource DownloadIcon}" Width="22" Height="22"/>
+                                <Image Source="{StaticResource DownloadIcon}" Width="24" Height="24"/>
                             </Button>
                             <Button x:Name="btnDeleteZapretVersion"
                                     IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"
                                     Command="{Binding DeleteZapretVersionCommand}"
                                     Style="{StaticResource DeleteButtonStyle}">
-                                <Image Source="{StaticResource CloseIcon}" Width="18" Height="18"/>
+                                <Image Source="{StaticResource CloseIcon}" Width="20" Height="20"/>
                             </Button>
                         </StackPanel>
                     </Grid>

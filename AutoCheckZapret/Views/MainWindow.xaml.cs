@@ -22,5 +22,10 @@ namespace AutoCheckZapret
         {
 
         }
+
+        private void cbxZapretVersions_SelectionChanged_1(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }
