@@ -84,8 +84,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Background" Value="#242424"/>
-                    <Setter Property="Foreground" Value="#585858"/>
+                    <Setter Property="Opacity" Value="0.5"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -156,7 +155,7 @@
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="20"/>
+                                                                <ColumnDefinition Width="40"/>
                                                             </Grid.ColumnDefinitions>
                                                             <ContentPresenter x:Name="ContentSite"
                                                                               Grid.Column="0"
@@ -165,12 +164,7 @@
                                                                               VerticalAlignment="Center"
                                                                               HorizontalAlignment="Left"
                                                                               Margin="10,0,0,0"/>
-                                                            <Path x:Name="Arrow"
-                                                                  Grid.Column="1"
-                                                                  Fill="{TemplateBinding Foreground}"
-                                                                  HorizontalAlignment="Center"
-                                                                  VerticalAlignment="Center"
-                                                                  Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                                            <Image x:Name="Icon" Grid.Column="1" Source="{StaticResource ToggleIcon}" Height="12" Width="12" Margin="0,3,0,0"/>
                                                         </Grid>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
@@ -181,7 +175,7 @@
                                                             <Setter TargetName="Border" Property="Background" Value="#555555"/>
                                                         </Trigger>
                                                         <Trigger Property="IsEnabled" Value="False">
-                                                            <Setter TargetName="Arrow" Property="Fill" Value="#585858"/>
+                                                            <Setter TargetName="Icon" Property="Opacity" Value="0.5"/>
                                                             <Setter Property="Background" Value="#242424"/>
                                                             <Setter Property="Foreground" Value="#585858"/>
                                                         </Trigger>
@@ -250,14 +244,20 @@
 
                     <!-- Кнопки управления окном -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <Button x:Name="btnMinimizeWindow" Content="_" Margin="0,0,5,0"
+                        <Button x:Name="btnMinimizeWindow" Margin="0,0,5,0"
                                 Style="{StaticResource MinimizeButtonStyle}"
-                                Command="{Binding MinimizeWindowCommand}"/>
-                        <Button x:Name="btnToggleFullscreen" Content="☐" Margin="0,0,5,0"
-                                Style="{StaticResource MaximizeButtonStyle}"/>
-                        <Button x:Name="btnCloseWindow" Content="X"
+                                Command="{Binding MinimizeWindowCommand}">
+                            <Image Source="{StaticResource ViewOffIcon}" Width="12" Height="12"/>
+                        </Button>
+                        <Button x:Name="btnToggleFullscreen" Margin="0,0,5,0"
+                                Style="{StaticResource MaximizeButtonStyle}">
+                            <Image Source="{StaticResource MaximizeIcon}" Width="12" Height="12"/>
+                        </Button>
+                        <Button x:Name="btnCloseWindow" 
                                 Style="{StaticResource CloseButtonStyle}"
-                                Command="{Binding ShutdownApplicationCommand}"/>
+                                Command="{Binding ShutdownApplicationCommand}">
+                            <Image Source="{StaticResource CloseIcon}" Width="12" Height="12" />
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -295,14 +295,18 @@
 
                         <!-- Кнопки скачивания и удаления -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5,0,0,0">
-                            <Button x:Name="btnDownloadZapretVersion" Content="->" Margin="0,0,5,0"
+                            <Button x:Name="btnDownloadZapretVersion" Margin="0,0,5,0"
                                     IsEnabled="{Binding CanDownloadZapretVersion}"
                                     Command="{Binding DownloadZapretVersionCommand}"
-                                    Style="{StaticResource DownloadButtonStyle}"/>
-                            <Button x:Name="btnDeleteZapretVersion" Content="X"
+                                    Style="{StaticResource DownloadButtonStyle}">
+                                <Image Source="{StaticResource DownloadIcon}" Width="22" Height="22"/>
+                            </Button>
+                            <Button x:Name="btnDeleteZapretVersion"
                                     IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"
                                     Command="{Binding DeleteZapretVersionCommand}"
-                                    Style="{StaticResource DeleteButtonStyle}"/>
+                                    Style="{StaticResource DeleteButtonStyle}">
+                                <Image Source="{StaticResource CloseIcon}" Width="18" Height="18"/>
+                            </Button>
                         </StackPanel>
                     </Grid>
 
