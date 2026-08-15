@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:AutoCheckZapret"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-         
+        <FontFamily x:Key="Montserrat">pack://application:,,,/Fonts/#Montserrat</FontFamily>
+        <FontFamily x:Key="TheMagicOfDots">pack://application:,,,/Fonts/#The Magic of Dots</FontFamily>
     </Application.Resources>
 </Application>

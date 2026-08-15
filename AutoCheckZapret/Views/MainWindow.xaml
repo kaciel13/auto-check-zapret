@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:AutoCheckZapret"
         mc:Ignorable="d"
         Title="AutoCheckZapret" Height="800" Width="720" MinHeight="500" MinWidth="430"
-        Background="Transparent" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" AllowsTransparency="False">
+        Background="Transparent" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" AllowsTransparency="False" FontFamily="{StaticResource Montserrat}">
 
     <!-- Ресурсы окна: общие стили и эффекты -->
     <Window.Resources>
@@ -113,6 +113,8 @@
 
         <Style x:Key="ChooseButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonBaseStyle}">
             <Setter Property="Height" Value="40"/>
+            <Setter Property="FontFamily" Value="{StaticResource TheMagicOfDots}"/>
+            <Setter Property="FontSize" Value="20"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#555555"/>
@@ -243,7 +245,7 @@
                     <!-- Логотип и название приложения -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Rectangle Fill="#FFD84343" Width="36" Height="36" Margin="0,0,5,0"/>
-                        <Label x:Name="lbTitle" VerticalAlignment="Center" Foreground="#FEFEFE"  Content="{Binding AppNameWithVersion}"/>
+                        <Label x:Name="lbTitle" VerticalAlignment="Center" Foreground="#FEFEFE"  Content="{Binding AppNameWithVersion}" FontSize="14"/>
                     </StackPanel>
 
                     <!-- Кнопки управления окном -->
@@ -283,7 +285,7 @@
                                   ItemsSource="{Binding ZapretVersions}"
                                   SelectedItem="{Binding SelectedZapretVersion}"
                                   IsEnabled="{Binding HasFetchedZapretVersions}"
-                                  Style="{StaticResource CustomComboBoxStyle}">
+                                  Style="{StaticResource CustomComboBoxStyle}" FontSize="16">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Path=Number}"/>
@@ -307,7 +309,7 @@
                     <!-- Консольный вывод -->
                     <Border Grid.Row="1" CornerRadius="5" Background="#1B1B1B" Margin="0,10,0,10">
                         <TextBox x:Name="txtBxConsole"  Text="Консоль" 
-                             Foreground="#FEFEFE" Background="Transparent" CaretBrush="Gainsboro" IsReadOnly="True" BorderBrush="Transparent" Padding="14, 7"/>
+                             Foreground="#FEFEFE" Background="Transparent" CaretBrush="Gainsboro" IsReadOnly="True" BorderBrush="Transparent" Padding="14, 7" FontFamily="{StaticResource TheMagicOfDots}" FontSize="20"/>
                     </Border>
 
                     <!-- Кнопка выбора метода обхода -->
