@@ -188,12 +188,14 @@ namespace AutoCheckZapret.ViewModels
         }
 
         private ZapretVersionsService _zapretVersionsService;
-
+        private Updater _updater;
         /// <summary>
         /// Конструктор главной ВьюМодели
         /// </summary>
         public MainViewModel()
         {
+            _updater = new Updater();
+            _updater.CheckUpdate();
             _zapretVersionsService = new ZapretVersionsService();
 
             Assembly assembly = Assembly.GetExecutingAssembly();
