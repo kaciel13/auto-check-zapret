@@ -240,6 +240,9 @@ namespace AutoCheckZapret.ViewModels
         {
             ZapretVersions = await _zapretVersionsService.FetchAvailableVersions();
             // TODO: Вот тут, наверное, нужно сделать проверку какую-то на то, были ли получены версии Запрета
+            foreach (var version in ZapretVersions) { 
+                version.IsDownloaded = _zapretVersionsService.IsZapretVersionDownloaded(version);
+            }
 
             SelectedZapretVersion = ZapretVersions[0];
         }
@@ -255,7 +258,7 @@ namespace AutoCheckZapret.ViewModels
                 // TODO: В консоль нужно что-то выводить, собственно, по поводу возникшей при скачивании ошибки
                 MessageBox.Show($"Ошибка скачивания Zapret версии {SelectedZapretVersion.Number}. Смотрите детали ошибки в консоли программы.", "Ошибка скачивания версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
+            SelectedZapretVersion.IsDownloaded = true;
             CanDeleteOrWorkWithZapretVersion = true;
         }
 
@@ -267,6 +270,7 @@ namespace AutoCheckZapret.ViewModels
             bool isVersionDeleted = _zapretVersionsService.DeleteZapretVersion(SelectedZapretVersion);
             if (isVersionDeleted)
             {
+                SelectedZapretVersion.IsDownloaded = false;
                 CanDownloadZapretVersion = true;
                 CanDeleteOrWorkWithZapretVersion = false;
             }
