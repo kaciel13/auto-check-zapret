@@ -15,9 +15,11 @@
 	<AssemblyName>$(AppName) $(Version)</AssemblyName>
 	<Copyright>kaciel13 x EdgeFirewalk (с) 2026</Copyright>
 	<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	<ApplicationIcon>appIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="appIcon.ico" />
     <None Remove="Fonts\Montserrat.ttf" />
     <None Remove="Fonts\the-magic-of-dots.ttf" />
   </ItemGroup>
@@ -30,10 +32,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="appIcon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="appIcon.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Fonts\Montserrat.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
