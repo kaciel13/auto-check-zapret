@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Documents;
 
 namespace AutoCheckZapret.ViewModels
 {
@@ -15,6 +16,8 @@ namespace AutoCheckZapret.ViewModels
     public class MainViewModel : INotifyPropertyChanged
     {
         private string _appNameWithVersion;
+        private Logger _logger;
+        public FlowDocument LogDocument => _logger?.LogDocument;
         /// <summary>
         /// Имя приложения Auto Check Zapret с версией, которое отображается в заголовке приложения
         /// </summary>
@@ -189,19 +192,20 @@ namespace AutoCheckZapret.ViewModels
 
         private ZapretVersionsService _zapretVersionsService;
         private Updater _updater;
+        
+        //public Logger Logger => _logger;
         /// <summary>
         /// Конструктор главной ВьюМодели
         /// </summary>
         public MainViewModel()
         {
+            _logger = new Logger();
             _updater = new Updater();
             _updater.CheckUpdate();
             _zapretVersionsService = new ZapretVersionsService();
-
             Assembly assembly = Assembly.GetExecutingAssembly();
             AssemblyName assemblyName = assembly.GetName();
             Version version = assemblyName.Version!;
-
             //// В конце используем Build, потому что в .csproj используем вид Major.Minor.Feature, а не Major.Minor.Feature.Build
             //// А VS определяет последнюю цифру как Build
             AppNameWithVersion = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
@@ -240,10 +244,18 @@ namespace AutoCheckZapret.ViewModels
 
         private async Task FetchAvailableZapretVersions()
         {
-            ZapretVersions = await _zapretVersionsService.FetchAvailableVersions();
-            // TODO: Вот тут, наверное, нужно сделать проверку какую-то на то, были ли получены версии Запрета
-            foreach (var version in ZapretVersions) { 
-                version.IsDownloaded = _zapretVersionsService.IsZapretVersionDownloaded(version);
+            _logger.AddInfo("Получение версий Zapret...");
+            try {
+                ZapretVersions = await _zapretVersionsService.FetchAvailableVersions();
+                // TODO: Вот тут, наверное, нужно сделать проверку какую-то на то, были ли получены версии Запрета
+                foreach (var version in ZapretVersions) { 
+                    version.IsDownloaded = _zapretVersionsService.IsZapretVersionDownloaded(version);
+                }
+                _logger.AddSuccess($"Получено {ZapretVersions.Count} версий.", false);
+            }
+            catch (Exception ex)
+            {
+                _logger.AddError($"Ошибка получения версий: {ex.Message}");
             }
 
             SelectedZapretVersion = ZapretVersions[0];
@@ -254,32 +266,37 @@ namespace AutoCheckZapret.ViewModels
             CanDownloadZapretVersion = false;
 
             ZapretVersionsService downloaderService = new ZapretVersionsService();
-            bool isDownloaded = await downloaderService.DownloadZapretVersion(SelectedZapretVersion);
-            if (!isDownloaded)
-            {
-                // TODO: В консоль нужно что-то выводить, собственно, по поводу возникшей при скачивании ошибки
-                MessageBox.Show($"Ошибка скачивания Zapret версии {SelectedZapretVersion.Number}. Смотрите детали ошибки в консоли программы.", "Ошибка скачивания версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
+            try {
+                _logger.AddInfo($"Cкачивание версии zapret {SelectedZapretVersion.Number}...");
+                await downloaderService.DownloadZapretVersion(SelectedZapretVersion);
+                SelectedZapretVersion.IsDownloaded = true;
+                CanDeleteOrWorkWithZapretVersion = true;
+                _logger.AddSuccess("Скачивание завершено", false);
             }
-            SelectedZapretVersion.IsDownloaded = true;
-            CanDeleteOrWorkWithZapretVersion = true;
+            catch (Exception ex)
+            {
+                _logger.AddError($"Ошибка скачивания: {ex.Message}");
+            }
         }
 
         private void DeleteZapretVersion(object param)
         {
             MessageBoxResult questionResult = MessageBox.Show($"Вы уверены, что хотите удалить Zapret версии {SelectedZapretVersion.Number}?", "Подтверждение удаления версии Zapret", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (questionResult != MessageBoxResult.Yes) { return; }
-
-            bool isVersionDeleted = _zapretVersionsService.DeleteZapretVersion(SelectedZapretVersion);
-            if (isVersionDeleted)
+            try
             {
+                _logger.AddInfo($"Удаление версии zapret {SelectedZapretVersion.Number}...");
+                _zapretVersionsService.DeleteZapretVersion(SelectedZapretVersion);
                 SelectedZapretVersion.IsDownloaded = false;
                 CanDownloadZapretVersion = true;
                 CanDeleteOrWorkWithZapretVersion = false;
+                _logger.AddSuccess("Версия удалена", false);
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Не удалось удалить версию Zapret, т.к. файлы версии открыты или используются в каких-либо процессах.", "Ошибка удаления версии Zapret", MessageBoxButton.OK, MessageBoxImage.Error);
+                _logger.AddError($"Ошибка: {ex.Message}");
             }
+
         }
     }
 }
