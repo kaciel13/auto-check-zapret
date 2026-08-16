@@ -16,6 +16,7 @@
 	<Copyright>kaciel13 x EdgeFirewalk (с) 2026</Copyright>
 	<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	<ApplicationIcon>appIcon.ico</ApplicationIcon>
+	<ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
