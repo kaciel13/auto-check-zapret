@@ -17,5 +17,15 @@ namespace AutoCheckZapret
 
             DataContext = new MainViewModel();
         }
+
+        private void cbxZapretVersions_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void cbxZapretVersions_SelectionChanged_1(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }

@@ -25,10 +25,12 @@
         /// </summary>
         /// <param name="number">Номер версии</param>
         /// <param name="downloadUrl">Ссылка для скачивания версии с официального репозитория</param>
-        public ZapretVersion(string number, string downloadUrl)
+        ///  <param name="isDownloaded">Значение скачана ли версия</param>
+        public ZapretVersion(string number, string downloadUrl, bool isDownloaded = false)
         {
             Number = number;
             DownloadUrl = downloadUrl;
+            IsDownloaded = isDownloaded;
         }
     }
 }
