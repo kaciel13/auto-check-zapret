@@ -77,7 +77,6 @@ namespace AutoCheckZapret.Services
             string versionPath = Path.Combine(DownloadPath, version.Number);
 
             // TODO: Отрефакторить скачивание, убрать лишние try...catch
-            // TODO: Переименовывать распакованную папку просто в версию запрета
 
             try
             {
