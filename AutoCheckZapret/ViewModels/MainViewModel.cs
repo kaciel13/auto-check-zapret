@@ -306,16 +306,19 @@ namespace AutoCheckZapret.ViewModels
             CanDownloadZapretVersion = false;
 
             ZapretVersionsService downloaderService = new ZapretVersionsService();
-            try {
-                _logger.AddInfo($"Cкачивание версии Zapret {SelectedZapretVersion.Number}...");
-                await downloaderService.DownloadZapretVersion(SelectedZapretVersion);
+            _logger.AddInfo($"Cкачивание версии Zapret {SelectedZapretVersion.Number}...");
+
+            bool isVersionDownloaded = await downloaderService.DownloadZapretVersion(SelectedZapretVersion);
+
+            if (isVersionDownloaded)
+            {
                 SelectedZapretVersion.IsDownloaded = true;
                 CanDeleteOrWorkWithZapretVersion = true;
-                _logger.AddSuccess("Скачивание завершено", false);
+                _logger.AddSuccess("Скачивание завершено!", false);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.AddError($"Ошибка скачивания: {ex.Message}");
+                _logger.AddError("Ошибка скачивания Zapret: проблемы с соединением или версия не поддерживается программой Auto Check Zapret.");
             }
         }
 
@@ -323,6 +326,7 @@ namespace AutoCheckZapret.ViewModels
         {
             MessageBoxResult questionResult = MessageBox.Show($"Вы уверены, что хотите удалить Zapret версии {SelectedZapretVersion.Number}?", "Подтверждение удаления версии Zapret", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (questionResult != MessageBoxResult.Yes) { return; }
+
             try
             {
                 _logger.AddInfo($"Удаление версии Zapret {SelectedZapretVersion.Number}...");

@@ -112,11 +112,31 @@ namespace AutoCheckZapret.Services
                     }
                 }
 
+                // Удаляем распакованный архив
                 File.Delete(versionPath);
+
+                // Пользователь может скачать не самую новую версию Zapret
+                // В таком случае при запуске любого обхода Zapret будет проверять себя на наличие обновлений
+                // И будет открываться страница в браузере с новейшей версией, чего нам не надо
+                // Поэтому обрубаем Zapret возможность провериться на обновления
+
+                string servicePath = Path.Combine(DownloadPath, $"zapret-discord-youtube-{version.Number}", "service.bat");
+                string targetText = ":service_check_updates";
+                string textToInsert = "goto menu";
+
+                // Лезем в service.bat скачанной версии Zapret
+                List<string> allLines = File.ReadAllLines(servicePath).ToList();
+                int targetIndex = allLines.IndexOf(targetText);
+
+                if (targetIndex == -1) { return false; } // Будем считать, что версия не поддерживается, если мы не можем убрать возможность проверки на обновления
+
+                allLines.Insert(targetIndex + 1, textToInsert);
+                File.WriteAllLines(servicePath, allLines);
             }
             catch
             {
                 if (File.Exists(versionPath)) { File.Delete(versionPath); }
+                return false;
             }
 
             return true;
