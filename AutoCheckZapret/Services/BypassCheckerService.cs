@@ -1,6 +1,5 @@
 ﻿using AutoCheckZapret.Helpers;
 using System.Diagnostics;
-using System.IO;
 
 namespace AutoCheckZapret.Services
 {
@@ -19,8 +18,9 @@ namespace AutoCheckZapret.Services
         /// <returns>bool - удалось ли подобрать подходящий обход из списка, string - название .bat-файла с подходящим обходом (если подходящий найден)</returns>
         public static async Task<ValueTuple<bool, string>> FindBypassMethodAsync(List<string> bypassMethodsPaths, Logger logger, string versionPath, CancellationToken ct)
         {
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < bypassMethodsPaths.Count; i++)
             {
+                // Перед началом тестирования каждого обхода проверяем, не отменил ли пользователь подбор обходов
                 ct.ThrowIfCancellationRequested();
 
                 string bypassMethodName = string.Empty;
@@ -28,45 +28,7 @@ namespace AutoCheckZapret.Services
                 bypassMethodName = bypassMethodsPaths[i].Substring(index + 1);
 
                 logger.AddInfo($"Тест обхода \"{bypassMethodName}\" ({i + 1}/{bypassMethodsPaths.Count})...");
-
-                ProcessStartInfo processStartInfo = new ProcessStartInfo()
-                {
-                    FileName = "cmd.exe",
-                    WorkingDirectory = versionPath,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    //Arguments = "service.bat",
-                    RedirectStandardOutput = true,
-                    RedirectStandardInput = true
-                };
-                
-                using (Process process = Process.Start(processStartInfo)!)
-                {
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (e.Data == null) return;
-
-                        if (e.Data.Contains(">"))
-                        {
-                            //process.StandardInput.WriteLine("service.bat");
-                        }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-
-                    using (StreamWriter sw = process.StandardInput)
-                    {
-                        if (sw.BaseStream.CanWrite)
-                        {
-                            sw.WriteLine("cls");
-                        }
-                    }
-
-                    process.WaitForExit();
-                }
-
-                /* using (Process mainProcess = new Process())
+                using (Process mainProcess = new Process())
                 {
                     mainProcess.StartInfo = new ProcessStartInfo()
                     {
@@ -74,11 +36,9 @@ namespace AutoCheckZapret.Services
                         WorkingDirectory = versionPath,
                         UseShellExecute = false,
                         CreateNoWindow = true,
-                        Arguments = "/k" + bypassMethodName,
-                        RedirectStandardOutput = true
+                        Arguments = "/k" + bypassMethodName
                     };
                     mainProcess.Start();
-
 
                     logger.AddInfo("    Проверка Discord...");
                     bool isDiscordResponding = await UrlChecker.IsUrlRespondingAsync("http://discord.com");
@@ -116,10 +76,10 @@ namespace AutoCheckZapret.Services
                     {
                         return (true, bypassMethodName);
                     }
-                }*/
+                }
 
-                //logger.AddError($"Обход \"{bypassMethodName}\" не подходит...");
-                //logger.AddInfo("");
+                logger.AddError($"Обход \"{bypassMethodName}\" не подходит...");
+                logger.AddInfo("");
             }
 
             return (false, string.Empty);
