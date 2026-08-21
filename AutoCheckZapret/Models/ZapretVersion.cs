@@ -36,6 +36,7 @@
             Number = number;
             DownloadUrl = downloadUrl;
             IsDownloaded = isDownloaded;
+            BypassMethodName = string.Empty;
         }
     }
 }
