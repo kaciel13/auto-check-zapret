@@ -285,7 +285,9 @@
                             <Image Source="{StaticResource ViewOffIcon}" Width="10" Height="10"/>
                         </Button>
                         <Button x:Name="btnToggleFullscreen" Margin="0,0,5,0"
-                                Style="{StaticResource MaximizeButtonStyle}">
+                                Style="{StaticResource MaximizeButtonStyle}"
+                                Command="{Binding MaximizeWindowCommand}"
+                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}">
                             <Image Source="{StaticResource MaximizeIcon}" Width="16" Height="16"/>
                         </Button>
                         <Button x:Name="btnCloseWindow" 
