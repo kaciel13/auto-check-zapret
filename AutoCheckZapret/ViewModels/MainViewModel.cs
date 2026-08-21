@@ -343,7 +343,7 @@ namespace AutoCheckZapret.ViewModels
                 SelectedZapretVersion.IsDownloaded = false;
                 CanDownloadZapretVersion = true;
                 CanDeleteOrWorkWithZapretVersion = false;
-                _logger.AddSuccess("Версия удалена", false);
+                _logger.AddSuccess("Версия удалена.", false);
             }
             catch (Exception ex)
             {
@@ -357,6 +357,8 @@ namespace AutoCheckZapret.ViewModels
             {
                 _bypassCheckerCtSource.Cancel();
                 IsChoosingBypassMethod = false;
+                _logger.AddInfo("Отмена процесса подбора обхода...");
+                _logger.AddInfo("");
                 return;
             }
 

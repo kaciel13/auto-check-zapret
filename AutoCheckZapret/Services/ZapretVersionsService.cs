@@ -76,51 +76,42 @@ namespace AutoCheckZapret.Services
 
             string versionPath = Path.Combine(DownloadPath, version.Number);
 
-            try
+            using (HttpResponseMessage response = await _httpClient.GetAsync(version.DownloadUrl))
             {
-                using (HttpResponseMessage response = await _httpClient.GetAsync(version.DownloadUrl))
+                response.EnsureSuccessStatusCode();
+                await using Stream stream = await response.Content.ReadAsStreamAsync();
+
+                await using (FileStream fileStream = new FileStream(versionPath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    response.EnsureSuccessStatusCode();
-                    await using Stream stream = await response.Content.ReadAsStreamAsync();
-
-                    await using (FileStream fileStream = new FileStream(versionPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                    {
-                        await stream.CopyToAsync(fileStream);
-                    }
+                    await stream.CopyToAsync(fileStream);
                 }
-
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-                ZipFile.ExtractToDirectory(versionPath, DownloadPath, true);
-
-                // Удаляем распакованный архив
-                File.Delete(versionPath);
-
-                // Пользователь может скачать не самую новую версию Zapret
-                // В таком случае при запуске любого обхода Zapret будет проверять себя на наличие обновлений
-                // И будет открываться страница в браузере с новейшей версией, чего нам не надо
-                // Поэтому обрубаем Zapret возможность провериться на обновления
-
-                string servicePath = Path.Combine(DownloadPath, $"zapret-discord-youtube-{version.Number}", "service.bat");
-                string targetText = ":service_check_updates";
-                string textToInsert = "goto menu";
-
-                // Лезем в service.bat скачанной версии Zapret
-                List<string> allLines = File.ReadAllLines(servicePath).ToList();
-                int targetIndex = allLines.IndexOf(targetText);
-
-                if (targetIndex == -1) { return false; } // Будем считать, что версия не поддерживается, если мы не можем убрать возможность проверки на обновления
-
-                allLines.Insert(targetIndex + 1, textToInsert);
-
-                // Можем позволить себе перезаписать весь файл полностью, потому что service.bat весит немного
-                File.WriteAllLines(servicePath, allLines);
             }
-            catch
-            {
-                if (File.Exists(versionPath)) { File.Delete(versionPath); }
-                return false;
-            }
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            ZipFile.ExtractToDirectory(versionPath, DownloadPath, true);
+
+            // Удаляем распакованный архив
+            File.Delete(versionPath);
+
+            // Пользователь может скачать не самую новую версию Zapret
+            // В таком случае при запуске любого обхода Zapret будет проверять себя на наличие обновлений
+            // И будет открываться страница в браузере с новейшей версией, чего нам не надо
+            // Поэтому обрубаем Zapret возможность провериться на обновления
+            string servicePath = Path.Combine(DownloadPath, $"zapret-discord-youtube-{version.Number}", "service.bat");
+            string targetText = ":service_check_updates";
+            string textToInsert = "goto menu";
+
+            // Лезем в service.bat скачанной версии Zapret
+            List<string> allLines = File.ReadAllLines(servicePath).ToList();
+            int targetIndex = allLines.IndexOf(targetText);
+
+            if (targetIndex == -1) { return false; } // Будем считать, что версия не поддерживается, если мы не можем убрать возможность проверки на обновления
+
+            allLines.Insert(targetIndex + 1, textToInsert);
+
+            // Можем позволить себе перезаписать весь файл полностью, потому что service.bat весит немного
+            File.WriteAllLines(servicePath, allLines);
 
             return true;
         }
