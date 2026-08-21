@@ -76,8 +76,6 @@ namespace AutoCheckZapret.Services
 
             string versionPath = Path.Combine(DownloadPath, version.Number);
 
-            // TODO: Отрефакторить скачивание, убрать лишние try...catch
-
             try
             {
                 using (HttpResponseMessage response = await _httpClient.GetAsync(version.DownloadUrl))
@@ -93,24 +91,7 @@ namespace AutoCheckZapret.Services
 
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-                try
-                {
-                    // Попытка 1: с кодировкой 866 (Windows-1251)
-                    ZipFile.ExtractToDirectory(versionPath, DownloadPath, Encoding.GetEncoding(866), true);
-                }
-                catch
-                {
-                    try
-                    {
-                        // Попытка 2: с UTF-8
-                        ZipFile.ExtractToDirectory(versionPath, DownloadPath, Encoding.UTF8, true);
-                    }
-                    catch
-                    {
-                        // Попытка 3: с кодировкой по умолчанию
-                        ZipFile.ExtractToDirectory(versionPath, DownloadPath, true);
-                    }
-                }
+                ZipFile.ExtractToDirectory(versionPath, DownloadPath, true);
 
                 // Удаляем распакованный архив
                 File.Delete(versionPath);
@@ -131,6 +112,8 @@ namespace AutoCheckZapret.Services
                 if (targetIndex == -1) { return false; } // Будем считать, что версия не поддерживается, если мы не можем убрать возможность проверки на обновления
 
                 allLines.Insert(targetIndex + 1, textToInsert);
+
+                // Можем позволить себе перезаписать весь файл полностью, потому что service.bat весит немного
                 File.WriteAllLines(servicePath, allLines);
             }
             catch
@@ -170,7 +153,20 @@ namespace AutoCheckZapret.Services
         /// <returns>true - версия скачана, false - версия не скачана</returns>
         public bool IsZapretVersionDownloaded(ZapretVersion version)
         {
-            return !string.IsNullOrEmpty(GetVersionFolderPath(version));
+            string versionPath = GetVersionFolderPath(version);
+
+            // Смотрим следующее:
+            // 1. Папки нет вообще
+            // 2. Папка пустая, а также вложенные в неё папки пустые
+            // 3. В папке нет ни одного .bat-файла
+            if (string.IsNullOrEmpty(versionPath) ||
+                !Directory.EnumerateFiles(versionPath, "*", SearchOption.AllDirectories).Any() ||
+                !Directory.EnumerateFiles(versionPath, "*.bat").Any())
+            { 
+                return false; 
+            }
+
+            return true;
         }
 
         /// <summary>

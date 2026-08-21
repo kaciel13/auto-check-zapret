@@ -319,7 +319,7 @@
                                   MinWidth="44"
                                   ItemsSource="{Binding ZapretVersions}"
                                   SelectedItem="{Binding SelectedZapretVersion}"
-                                  IsEnabled="{Binding HasFetchedZapretVersions}"
+                                  IsEnabled="{Binding CanSelectZapretVersion}"
                                   Style="{StaticResource CustomComboBoxStyle}" FontSize="16">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
