@@ -103,9 +103,16 @@ namespace AutoCheckZapret.Services
             string textToInsert = "goto menu";
 
             // Лезем в service.bat скачанной версии Zapret
-            List<string> allLines = File.ReadAllLines(servicePath).ToList();
-            int targetIndex = allLines.IndexOf(targetText);
+            List<string> allLines;
+            try
+            {
+                // Если тут ловим, что файл не найден, то говорим, что версия успешно скачана и всё
+                // Старые версии Zapret не имеют единого service.bat
+                allLines = File.ReadAllLines(servicePath).ToList();
+            }
+            catch (FileNotFoundException) { return true; }
 
+            int targetIndex = allLines.IndexOf(targetText);
             if (targetIndex == -1) { return false; } // Будем считать, что версия не поддерживается, если мы не можем убрать возможность проверки на обновления
 
             allLines.Insert(targetIndex + 1, textToInsert);
