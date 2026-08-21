@@ -19,7 +19,10 @@ namespace AutoCheckZapret.ViewModels
         public FlowDocument LogDocument => _logger?.LogDocument;
 
         private string _appNameWithVersion;
+
         private Logger _logger;
+
+        private ZapretService _zapretService;
         private CancellationTokenSource _bypassCheckerCtSource;
 
         /// <summary>
@@ -363,17 +366,17 @@ namespace AutoCheckZapret.ViewModels
             }
 
             IsChoosingBypassMethod = true;
+            _logger.AddInfo("");
+            _logger.AddInfo($"Запущен процесс подбора обхода для Zapret v{SelectedZapretVersion.Number}.");
 
             string versionPath = $"versions\\zapret-discord-youtube-{SelectedZapretVersion.Number}";
-
-            List<string> bypassMethods = Directory.GetFiles(versionPath, "*.bat").ToList();
-            bypassMethods.Remove($"{versionPath}\\service.bat");
+            _zapretService = new ZapretService(versionPath);
 
             bool hasFoundBypassMethod = false;
             string bypassMethodName = string.Empty;
             try
             {
-                (hasFoundBypassMethod, bypassMethodName) = await BypassCheckerService.FindBypassMethodAsync(bypassMethods, _logger, versionPath, _bypassCheckerCtSource.Token);
+                (hasFoundBypassMethod, bypassMethodName) = await BypassCheckerService.FindBypassMethodAsync(_zapretService, _logger, _bypassCheckerCtSource.Token);
             }
             catch (System.OperationCanceledException)
             {
@@ -384,8 +387,9 @@ namespace AutoCheckZapret.ViewModels
 
             if (hasFoundBypassMethod)
             {
+                _logger.AddInfo("");
                 _logger.AddSuccess("Найден подходящий обход!");
-                SelectedZapretVersion.BypassMethodName = bypassMethodName!;
+                SelectedZapretVersion.BypassMethodName = bypassMethodName;
             }
             else
             {
