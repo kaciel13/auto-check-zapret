@@ -19,9 +19,25 @@ public class Logger : INotifyPropertyChanged
         _logDocument = new LogDocument(new FlowDocument());
     }
 
-    // Основные методы с необязательным параметром newLine
+    /// <summary>
+    /// Добавить сообщение с информацией (белый текст)
+    /// </summary>
+    /// <param name="message">Текст сообщения</param>
+    /// <param name="newLine">Вывести сообщение с новой строки</param>
     public void AddInfo(string message, bool newLine = true) => AppendMessage(message, InfoBrush, newLine);
+
+    /// <summary>
+    /// Добавить сообщение с ошибкой (красный текст)
+    /// </summary>
+    /// <param name="message">Текст сообщения</param>
+    /// <param name="newLine">Вывести сообщение с новой строки</param>
     public void AddError(string message, bool newLine = true) => AppendMessage(message, ErrorBrush, newLine);
+
+    /// <summary>
+    /// Добавить сообщение об успехе (зелёный текст)
+    /// </summary>
+    /// <param name="message">Текст сообщения</param>
+    /// <param name="newLine">Вывести сообщение с новой строки</param>
     public void AddSuccess(string message, bool newLine = true) => AppendMessage(message, SuccessBrush, newLine);
 
     private void AppendMessage(string message, Brush color, bool newLine = true)

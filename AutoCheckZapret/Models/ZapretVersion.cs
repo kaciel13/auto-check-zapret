@@ -21,6 +21,11 @@
         public bool IsDownloaded { get; set; }
 
         /// <summary>
+        /// Название .bat-файла с обходом, который работает для данной версии Zapret
+        /// </summary>
+        public string BypassMethodName { get; set; }
+
+        /// <summary>
         /// Конструктор
         /// </summary>
         /// <param name="number">Номер версии</param>
@@ -31,6 +36,7 @@
             Number = number;
             DownloadUrl = downloadUrl;
             IsDownloaded = isDownloaded;
+            BypassMethodName = string.Empty;
         }
     }
 }
