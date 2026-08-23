@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Diagnostics;
+using System.Net.Http;
 
 namespace AutoCheckZapret.Helpers
 {
@@ -22,11 +23,12 @@ namespace AutoCheckZapret.Helpers
                 // Use a cancellation token to enforce a quick timeout
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
 
-                // Create a HEAD request to save bandwidth
-                using var request = new HttpRequestMessage(HttpMethod.Head, url);
-                using var response = await client.SendAsync(request, cts.Token);
+                Debug.WriteLine("Тест " + url);
+                
+                // Отправляем Get запрос хосту
+                HttpResponseMessage response = await client.GetAsync(url, cts.Token);
 
-                // Returns true if the status code is 2xx (Success)
+                // Возвращаем статус хоста
                 return response.IsSuccessStatusCode;
             }
             catch (Exception)
