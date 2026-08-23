@@ -368,8 +368,8 @@ namespace AutoCheckZapret.ViewModels
             IsChoosingBypassMethod = true;
             _logger.AddInfo("");
             _logger.AddInfo($"Запущен процесс подбора обхода для Zapret v{SelectedZapretVersion.Number}.");
-
-            string versionPath = $"versions\\zapret-discord-youtube-{SelectedZapretVersion.Number}";
+            
+            string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\zapret-discord-youtube-{SelectedZapretVersion.Number}";
             _zapretService = new ZapretService(versionPath);
 
             bool hasFoundBypassMethod = false;
