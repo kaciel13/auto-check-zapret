@@ -17,7 +17,9 @@ namespace AutoCheckZapret.ViewModels
     public class MainViewModel : INotifyPropertyChanged
     {
         public FlowDocument LogDocument => _logger?.LogDocument;
-
+        
+        private bool _isFullscreen = false;
+        
         private string _appNameWithVersion;
 
         private Logger _logger;
@@ -50,7 +52,17 @@ namespace AutoCheckZapret.ViewModels
             }
         }
 
-        // TODO: Команда для разворачивания окна на весь экран и обратно
+        private RelayCommand _maximizeWindowCommand;
+        /// <summary>
+        /// Команда для кнопки разворачивания окна на весь экран
+        /// </summary>
+        public RelayCommand MaximizeWindowCommand
+        {
+            get
+            {
+                return _maximizeWindowCommand ?? (_maximizeWindowCommand = new RelayCommand(MaximizeWindow));
+            }
+        }
 
         private RelayCommand _shutdownApplicationCommand;
         /// <summary>
@@ -281,7 +293,15 @@ namespace AutoCheckZapret.ViewModels
             Application.Current.MainWindow.WindowState = WindowState.Minimized;
         }
 
-        // TODO: Сделать метод для разворачивания окна на весь экран и обратно
+        private void MaximizeWindow(object param)
+        {
+            if (param is Window window)
+            {
+                window.WindowState = window.WindowState == WindowState.Normal
+                    ? WindowState.Maximized
+                    : WindowState.Normal;
+            }
+        }
 
         private void ShutdownApplication(object param)
         {
