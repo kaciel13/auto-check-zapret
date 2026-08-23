@@ -321,7 +321,7 @@
                                   MinWidth="44"
                                   ItemsSource="{Binding ZapretVersions}"
                                   SelectedItem="{Binding SelectedZapretVersion}"
-                                  IsEnabled="{Binding HasFetchedZapretVersions}"
+                                  IsEnabled="{Binding CanSelectZapretVersion}"
                                   Style="{StaticResource CustomComboBoxStyle}" FontSize="16">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -333,7 +333,7 @@
                                                     <Setter Property="Text" Value=""/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
-                                                            <Setter Property="Text" Value="Скачано"/>
+                                                            <Setter Property="Text" Value="[Скачана] [Обход не подобран]"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -370,6 +370,7 @@
                     <!-- Кнопка выбора метода обхода -->
                     <Button Grid.Row="2" Content="{Binding ChooseBypassMethodButtonContent}" Margin="0,0,0,10"
                             IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"
+                            Command="{Binding ChooseBypassMethodForVersionCommand}"
                             Style="{StaticResource ChooseButtonStyle}"/>
                 </Grid>
             </Border>

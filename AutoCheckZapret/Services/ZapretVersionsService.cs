@@ -1,6 +1,7 @@
 ﻿using AutoCheckZapret.Models;
 using HtmlAgilityPack;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -39,6 +40,8 @@ namespace AutoCheckZapret.Services
             // Проходимся по всем страницам с версиями Zapret
             while (true)
             {
+                Debug.WriteLine($"Загрузка страницы: {url}"); // Замена Console.WriteLine
+
                 string response = await _httpClient.GetStringAsync(url);
                 HtmlDocument document = new HtmlDocument();
                 document.LoadHtml(response);
@@ -49,7 +52,13 @@ namespace AutoCheckZapret.Services
                 HtmlNodeCollection downloadNodes = document.DocumentNode.SelectNodes("//li/a[contains(@href, 'zip')]");
 
                 // Если не нашли версий на текущей странице, значит страницы и версии закончились и парсинг можно прекращать
-                if (versionsNodes == null || downloadNodes == null) { break; }
+                if (versionsNodes == null || downloadNodes == null)
+                {
+                    Debug.WriteLine("Версии или ссылки на скачивание не найдены, завершаем парсинг"); // Замена Console.WriteLine
+                    break;
+                }
+
+                Debug.WriteLine($"Найдено {versionsNodes.Count} версий на странице"); // Замена Console.WriteLine
 
                 for (int i = 0; i < versionsNodes.Count; i++)
                 {
@@ -57,11 +66,13 @@ namespace AutoCheckZapret.Services
                     string archiveUrl = "https://github.com" + downloadNodes[i].GetAttributeValue("href", ""); // Ссылка для скачивания архива с версией
 
                     versions.Add(new ZapretVersion(tag, archiveUrl));
+                    Debug.WriteLine($"Добавлена версия: {tag}"); // Замена Console.WriteLine
                 }
 
                 url = GetNextVersionsPageUrl(versions[versions.Count - 1].Number);
             }
 
+            Debug.WriteLine($"Всего найдено версий: {versions.Count}"); // Замена Console.WriteLine
             return versions;
         }
 
@@ -72,53 +83,75 @@ namespace AutoCheckZapret.Services
         /// <returns>true - скачивание и распаковка успешны, false - ошибка при скачивании и распаковывании версии Zapret</returns>
         public async Task<bool> DownloadZapretVersion(ZapretVersion version)
         {
-            if (!Directory.Exists(DownloadPath)) { Directory.CreateDirectory(DownloadPath); }
+            Debug.WriteLine($"Начинаем скачивание версии: {version.Number}"); // Замена Console.WriteLine
+
+            if (!Directory.Exists(DownloadPath))
+            {
+                Directory.CreateDirectory(DownloadPath);
+                Debug.WriteLine($"Создана директория: {DownloadPath}"); // Замена Console.WriteLine
+            }
 
             string versionPath = Path.Combine(DownloadPath, version.Number);
+            Debug.WriteLine($"Путь к архиву: {versionPath}"); // Замена Console.WriteLine
 
-            // TODO: Отрефакторить скачивание, убрать лишние try...catch
-            // TODO: Переименовывать распакованную папку просто в версию запрета
+            using (HttpResponseMessage response = await _httpClient.GetAsync(version.DownloadUrl))
+            {
+                response.EnsureSuccessStatusCode();
+                await using Stream stream = await response.Content.ReadAsStreamAsync();
 
+                await using (FileStream fileStream = new FileStream(versionPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+
+            Debug.WriteLine($"Архив скачан, начинаем распаковку"); // Замена Console.WriteLine
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            ZipFile.ExtractToDirectory(versionPath, DownloadPath, true);
+
+            // Удаляем распакованный архив
+            File.Delete(versionPath);
+            Debug.WriteLine($"Архив удален"); // Замена Console.WriteLine
+
+            // Пользователь может скачать не самую новую версию Zapret
+            // В таком случае при запуске любого обхода Zapret будет проверять себя на наличие обновлений
+            // И будет открываться страница в браузере с новейшей версией, чего нам не надо
+            // Поэтому обрубаем Zapret возможность провериться на обновления
+            string servicePath = Path.Combine(DownloadPath, $"zapret-discord-youtube-{version.Number}", "service.bat");
+            Debug.WriteLine($"Путь к service.bat: {servicePath}"); // Замена Console.WriteLine
+
+            string targetText = ":service_check_updates";
+            string textToInsert = "goto menu";
+
+            // Лезем в service.bat скачанной версии Zapret
+            List<string> allLines;
             try
             {
-                using (HttpResponseMessage response = await _httpClient.GetAsync(version.DownloadUrl))
-                {
-                    response.EnsureSuccessStatusCode();
-                    await using Stream stream = await response.Content.ReadAsStreamAsync();
-
-                    await using (FileStream fileStream = new FileStream(versionPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                    {
-                        await stream.CopyToAsync(fileStream);
-                    }
-                }
-
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-                try
-                {
-                    // Попытка 1: с кодировкой 866 (Windows-1251)
-                    ZipFile.ExtractToDirectory(versionPath, DownloadPath, Encoding.GetEncoding(866), true);
-                }
-                catch
-                {
-                    try
-                    {
-                        // Попытка 2: с UTF-8
-                        ZipFile.ExtractToDirectory(versionPath, DownloadPath, Encoding.UTF8, true);
-                    }
-                    catch
-                    {
-                        // Попытка 3: с кодировкой по умолчанию
-                        ZipFile.ExtractToDirectory(versionPath, DownloadPath, true);
-                    }
-                }
-
-                File.Delete(versionPath);
+                // Если тут ловим, что файл не найден, то говорим, что версия успешно скачана и всё
+                // Старые версии Zapret не имеют единого service.bat
+                allLines = File.ReadAllLines(servicePath).ToList();
+                Debug.WriteLine($"service.bat найден, начинаем модификацию"); // Замена Console.WriteLine
             }
-            catch
+            catch (FileNotFoundException)
             {
-                if (File.Exists(versionPath)) { File.Delete(versionPath); }
+                Debug.WriteLine($"service.bat не найден для версии {version.Number}, пропускаем модификацию"); // Замена Console.WriteLine
+                return true;
             }
+
+            int targetIndex = allLines.IndexOf(targetText);
+            if (targetIndex == -1)
+            {
+                Debug.WriteLine($"Строка '{targetText}' не найдена в service.bat для версии {version.Number}"); // Замена Console.WriteLine
+                return false;
+            }
+
+            allLines.Insert(targetIndex + 1, textToInsert);
+
+            // Можем позволить себе перезаписать весь файл полностью, потому что service.bat весит немного
+            File.WriteAllLines(servicePath, allLines);
+            Debug.WriteLine($"service.bat успешно модифицирован для версии {version.Number}"); // Замена Console.WriteLine
 
             return true;
         }
@@ -129,15 +162,23 @@ namespace AutoCheckZapret.Services
         /// <param name="version">Версия Zapret для удаления</param>
         public bool DeleteZapretVersion(ZapretVersion version)
         {
+            Debug.WriteLine($"Удаление версии: {version.Number}"); // Замена Console.WriteLine
+
             string versionFolderPath = GetVersionFolderPath(version);
-            if (!Directory.Exists(versionFolderPath)) { return true; }
+            if (!Directory.Exists(versionFolderPath))
+            {
+                Debug.WriteLine($"Папка с версией {version.Number} не найдена"); // Замена Console.WriteLine
+                return true;
+            }
 
             try
             {
                 Directory.Delete(versionFolderPath, true);
+                Debug.WriteLine($"Папка с версией {version.Number} успешно удалена"); // Замена Console.WriteLine
             }
             catch (IOException ex)
             {
+                Debug.WriteLine($"Ошибка при удалении версии {version.Number}: {ex.Message}"); // Замена Console.WriteLine
                 return false;
             }
 
@@ -151,7 +192,22 @@ namespace AutoCheckZapret.Services
         /// <returns>true - версия скачана, false - версия не скачана</returns>
         public bool IsZapretVersionDownloaded(ZapretVersion version)
         {
-            return !string.IsNullOrEmpty(GetVersionFolderPath(version));
+            string versionPath = GetVersionFolderPath(version);
+
+            // Смотрим следующее:
+            // 1. Папки нет вообще
+            // 2. Папка пустая, а также вложенные в неё папки пустые
+            // 3. В папке нет ни одного .bat-файла
+            if (string.IsNullOrEmpty(versionPath) ||
+                !Directory.EnumerateFiles(versionPath, "*", SearchOption.AllDirectories).Any() ||
+                !Directory.EnumerateFiles(versionPath, "*.bat").Any())
+            {
+                Debug.WriteLine($"Версия {version.Number} не скачана"); // Замена Console.WriteLine
+                return false;
+            }
+
+            Debug.WriteLine($"Версия {version.Number} скачана"); // Замена Console.WriteLine
+            return true;
         }
 
         /// <summary>

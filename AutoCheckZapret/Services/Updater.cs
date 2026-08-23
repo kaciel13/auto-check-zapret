@@ -26,53 +26,59 @@ namespace AutoCheckZapret.Services
 
             using (WebClient wc = new WebClient())
             {
-                wc.Headers.Add(HttpRequestHeader.UserAgent, $"AutoCheckZapret/{currentVersion}");
-                string jsonString = wc.DownloadString("https://api.github.com/repos/kaciel13/auto-check-zapret/releases/latest");
-                JsonDocument json = JsonDocument.Parse(jsonString);
-                string lastVersion = json.RootElement.GetProperty("tag_name").GetString();
-
-                if (Version.Parse(currentVersion) < Version.Parse(lastVersion))
+                try
                 {
-                    if (MessageBox.Show($"Вышло новое обновление.\n{currentVersion} => {lastVersion}\nОбновить?",
-                    "Обновление", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                    wc.Headers.Add(HttpRequestHeader.UserAgent, $"AutoCheckZapret/{currentVersion}");
+                    string jsonString = wc.DownloadString("https://api.github.com/repos/kaciel13/auto-check-zapret/releases/latest");
+                    JsonDocument json = JsonDocument.Parse(jsonString);
+                    string lastVersion = json.RootElement.GetProperty("tag_name").GetString();
+
+                    if (Version.Parse(currentVersion) < Version.Parse(lastVersion))
                     {
-                        try
+                        if (MessageBox.Show($"Вышло новое обновление.\n{currentVersion} => {lastVersion}\nОбновить?",
+                        "Обновление", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                         {
-                            
-                            string downloadUrl = $"https://github.com/kaciel13/auto-check-zapret/releases/download/{lastVersion}/AutoCheckZapret.x64.zip";
-
-                            
-                            string appDir = AppDomain.CurrentDomain.BaseDirectory;
-                    
-
-                            string batPath = Path.Combine(appDir, "Helpers", "update.bat");
-
-                            if (!File.Exists(batPath))
+                            try
                             {
-                                MessageBox.Show($"Файл обновления не найден: {batPath}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                                return;
+
+                                string downloadUrl = $"https://github.com/kaciel13/auto-check-zapret/releases/download/{lastVersion}/AutoCheckZapret.x64.zip";
+
+
+                                string appDir = AppDomain.CurrentDomain.BaseDirectory;
+
+
+                                string batPath = Path.Combine(appDir, "Helpers", "update.bat");
+
+                                if (!File.Exists(batPath))
+                                {
+                                    MessageBox.Show($"Файл обновления не найден: {batPath}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    return;
+                                }
+
+
+                                ProcessStartInfo psi = new ProcessStartInfo
+                                {
+                                    FileName = batPath,
+                                    Arguments = $"\"{downloadUrl}\"",
+                                    WorkingDirectory = appDir,
+                                    WindowStyle = ProcessWindowStyle.Normal,
+                                    CreateNoWindow = false,
+                                    UseShellExecute = true
+                                };
+                                Process.Start(psi);
+
+
+                                Environment.Exit(0);
                             }
-
-                            
-                            ProcessStartInfo psi = new ProcessStartInfo
+                            catch (Exception ex)
                             {
-                                FileName = batPath,
-                                Arguments = $"\"{downloadUrl}\"",
-                                WorkingDirectory = appDir,   
-                                WindowStyle = ProcessWindowStyle.Normal,
-                                CreateNoWindow = false,
-                                UseShellExecute = true 
-                            };
-                            Process.Start(psi);
-
-                            
-                            Environment.Exit(0);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Ошибка обновления: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                                MessageBox.Show($"Ошибка обновления: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
                         }
                     }
+                }catch(Exception ex)
+                {
+                    MessageBox.Show($"Ошибка обновления: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
               
             }
