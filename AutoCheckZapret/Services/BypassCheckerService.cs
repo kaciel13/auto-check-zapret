@@ -21,18 +21,18 @@ namespace AutoCheckZapret.Services
             for (int i = 0; i < bypassFiles.Count; i++)
             {
                 // Перед началом тестирования каждого обхода проверяем, не отменил ли пользователь подбор обходов
+                await zapretService.RemoveServiceAsync(ct);
                 ct.ThrowIfCancellationRequested();
 
                 string bypassMethodName = string.Empty;
                 int index = bypassFiles[i].LastIndexOf("\\");
                 bypassMethodName = bypassFiles[i].Substring(index + 1);
-
                 logger.AddInfo($"Тест обхода \"{bypassMethodName}\" ({i + 1}/{bypassFiles.Count})...");
-                bool hasStartedZapret = zapretService.InstallService(bypassFiles[i]);
+
+                bool hasStartedZapret = await zapretService.InstallServiceAsync(bypassFiles[i], true, ct);
                 if (!hasStartedZapret)
                 {
                     logger.AddError("Не удалось запустить службу Zapret...", false);
-                    //return (false, string.Empty);
                     continue;
                 }
 
@@ -57,8 +57,6 @@ namespace AutoCheckZapret.Services
                 {
                     logger.AddError("Не отвечает...", false);
                 }
-
-                zapretService.RemoveService();
 
                 if (isDiscordResponding && isYouTubeResponding)
                 {
