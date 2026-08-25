@@ -177,7 +177,7 @@
                                                         </Trigger>
                                                         <Trigger Property="IsEnabled" Value="False">
                                                             <Setter TargetName="Icon" Property="Opacity" Value="0.5"/>
-                                                            <Setter Property="Background" Value="#242424"/>
+                                                            <Setter Property="Opacity" Value="0.5"/>
                                                             <Setter Property="Foreground" Value="#585858"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
@@ -326,14 +326,14 @@
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel FlowDirection="LeftToRight" Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Path=Number}" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding Number}" Margin="0,0,10,0"/>
                                         <TextBlock>
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Text" Value=""/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
-                                                            <Setter Property="Text" Value="[Скачана] [Обход не подобран]"/>
+                                                            <Setter Property="Text" Value="{Binding BypassMethodName, StringFormat='[Скачана] {0}'}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
