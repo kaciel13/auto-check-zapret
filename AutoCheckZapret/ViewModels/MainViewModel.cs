@@ -1,6 +1,7 @@
 ﻿using AutoCheckZapret.Helpers;
 using AutoCheckZapret.Models;
 using AutoCheckZapret.Services;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -26,6 +27,8 @@ namespace AutoCheckZapret.ViewModels
 
         private ZapretService _zapretService;
         private CancellationTokenSource _bypassCheckerCtSource;
+
+        private const string SavedDataFileName = "appdata.json";
 
         /// <summary>
         /// Имя приложения Auto Check Zapret с версией, которое отображается в заголовке приложения
@@ -247,7 +250,7 @@ namespace AutoCheckZapret.ViewModels
 
         private ZapretVersionsService _zapretVersionsService;
         private Updater _updater;
-        
+
         /// <summary>
         /// Конструктор главной ВьюМодели
         /// </summary>
@@ -305,9 +308,17 @@ namespace AutoCheckZapret.ViewModels
 
         private void ShutdownApplication(object param)
         {
-            // TODO: Сохранять данные приложения:
-            // TODO: Выбранная версия Zapret
-            // TODO: Последний работающий обход для всех скачанных версий Zapret
+            List<ZapretVersion> downloadedZapretVersions = ZapretVersions.Where(version => _zapretVersionsService.IsZapretVersionDownloaded(version)).ToList();
+
+            SavedApplicationData dataToSave = new SavedApplicationData()
+            {
+                LastSelectedZapretVersion = SelectedZapretVersion,
+                DownloadedZapretVersions = downloadedZapretVersions
+            };
+
+            string configJson = JsonConvert.SerializeObject(dataToSave, Formatting.Indented);
+
+            File.WriteAllText(SavedDataFileName, configJson);
 
             Application.Current.Shutdown();
         }
@@ -326,6 +337,32 @@ namespace AutoCheckZapret.ViewModels
             catch (Exception ex)
             {
                 _logger.AddError($"Ошибка получения версий: {ex.Message}");
+            }
+
+            // Читаем сохранённые данные пользователя, если они есть
+            if (File.Exists(SavedDataFileName))
+            {
+                string savedJson = File.ReadAllText(SavedDataFileName);
+
+                SavedApplicationData? savedData = null; ;
+                try
+                {
+                    savedData = JsonConvert.DeserializeObject<SavedApplicationData>(savedJson);
+                }
+                catch (JsonSerializationException)
+                {
+                    MessageBox.Show("Файл с сохранёнными настройками приложения был повреждён. Были загружены настройки по умолчанию", "Файл с сохранёнными настройками повреждён", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                if (savedData != null)
+                {
+                    ZapretVersion? lastSelectedVersion = ZapretVersions.FirstOrDefault(version => version.Number == savedData.LastSelectedZapretVersion.Number);
+                    if (lastSelectedVersion != null)
+                    {
+                        SelectedZapretVersion = lastSelectedVersion;
+                        return;
+                    }
+                }
             }
 
             SelectedZapretVersion = ZapretVersions[0];
@@ -398,7 +435,7 @@ namespace AutoCheckZapret.ViewModels
             {
                 (hasFoundBypassMethod, bypassMethodName) = await BypassCheckerService.FindBypassMethodAsync(_zapretService, _logger, _bypassCheckerCtSource.Token);
             }
-            catch (System.OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 _bypassCheckerCtSource = new CancellationTokenSource();
                 _logger.AddInfo("Процесс подбора обхода отменён.");
