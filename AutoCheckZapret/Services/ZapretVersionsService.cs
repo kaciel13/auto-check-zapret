@@ -180,16 +180,16 @@ namespace AutoCheckZapret.Services
             string versionFolderPath = GetVersionFolderPath(version);
             if (!Directory.Exists(versionFolderPath))
             {
-                Debug.WriteLine($"Папка с версией {version.Number} не найдена");  
+                Debug.WriteLine($"Папка с версией {version.Number} не найдена!");  
                 return true;
             }
 
             try
             {
                 Directory.Delete(versionFolderPath, true);
-                Debug.WriteLine($"Папка с версией {version.Number} успешно удалена");  
+                Debug.WriteLine($"Папка с версией {version.Number} успешно удалена!");  
             }
-            catch (IOException ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine($"Ошибка при удалении версии {version.Number}: {ex.Message}");  
                 return false;

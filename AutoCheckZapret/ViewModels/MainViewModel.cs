@@ -505,7 +505,7 @@ namespace AutoCheckZapret.ViewModels
             }
         }
 
-        private void DeleteZapretVersion(object param)
+        private async void DeleteZapretVersion(object param)
         {
             if (SelectedZapretVersion == null) return;
 
@@ -514,17 +514,20 @@ namespace AutoCheckZapret.ViewModels
 
             _logger.AddInfo($"Удаление версии Zapret {SelectedZapretVersion.Number}...");
 
-            try
+            // Если версия не может быть удалена, то только из-за того, что какой-то из файлов используется службой Zapret
+            // Убиваем службу и снова удаляем выбранную версию Zapret
+            bool isVersionDeleted = _zapretVersionsService.DeleteZapretVersion(SelectedZapretVersion.Model);
+            if (!isVersionDeleted)
             {
-                _zapretVersionsService.DeleteZapretVersion(SelectedZapretVersion.Model);
+                string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\{SelectedZapretVersion.Number}";
+                _zapretService = new ZapretService(versionPath);
 
-                SelectedZapretVersion.IsDownloaded = false; // обновит кнопки
-                _logger.AddSuccess("Версия удалена.", false);
+                await _zapretService.RemoveServiceAsync();
+                _zapretVersionsService.DeleteZapretVersion(SelectedZapretVersion.Model);
             }
-            catch (Exception ex)
-            {
-                _logger.AddError($"Ошибка удаления Zapret: {ex.Message}", false);
-            }
+
+            SelectedZapretVersion.IsDownloaded = false;
+            _logger.AddSuccess("Версия удалена.", false);
         }
 
         private async void ChooseBypassMethodForVersion(object param)
