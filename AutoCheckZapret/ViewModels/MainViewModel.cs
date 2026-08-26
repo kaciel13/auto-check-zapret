@@ -411,7 +411,7 @@ namespace AutoCheckZapret.ViewModels
 
             SavedApplicationData dataToSave = new SavedApplicationData()
             {
-                LastSelectedZapretVersion = SelectedZapretVersion?.Model,
+                LastSelectedZapretVersion = SelectedZapretVersion?.Model!,
                 DownloadedZapretVersions = downloadedZapretVersions
             };
 
@@ -446,7 +446,7 @@ namespace AutoCheckZapret.ViewModels
             {
                 string savedJson = File.ReadAllText(SavedDataFileName);
 
-                SavedApplicationData? savedData = null; ;
+                SavedApplicationData? savedData = null;
                 try
                 {
                     savedData = JsonConvert.DeserializeObject<SavedApplicationData>(savedJson);
@@ -462,8 +462,20 @@ namespace AutoCheckZapret.ViewModels
                     if (lastSelectedVersion != null)
                     {
                         SelectedZapretVersion = lastSelectedVersion;
-                        return;
                     }
+
+                    foreach (ZapretVersionViewModel fetchedVersion in ZapretVersions)
+                    {
+                        foreach (ZapretVersion downloadedVersion in savedData.DownloadedZapretVersions)
+                        {
+                            if (downloadedVersion.Number == fetchedVersion.Number)
+                            {
+                                fetchedVersion.BypassMethodName = downloadedVersion.BypassMethodName;
+                            }
+                        }
+                    }
+
+                    return;
                 }
             }
 
