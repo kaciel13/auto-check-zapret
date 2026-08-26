@@ -333,7 +333,7 @@
                                                     <Setter Property="Text" Value=""/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
-                                                            <Setter Property="Text" Value="{Binding BypassMethodName, StringFormat='[Скачана] [{0}]'}"/>
+                                                            <Setter Property="Text" Value="{Binding BypassMethodName, StringFormat='[Скачана] {0}'}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>

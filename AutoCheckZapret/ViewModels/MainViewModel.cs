@@ -86,6 +86,7 @@ namespace AutoCheckZapret.ViewModels
     /// </summary>
     public class MainViewModel : INotifyPropertyChanged
     {
+        public Logger Logger => _logger;
         public FlowDocument LogDocument => _logger?.LogDocument;
 
         private bool _isFullscreen = false;
