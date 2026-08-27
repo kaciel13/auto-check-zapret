@@ -1,5 +1,4 @@
-﻿using AutoCheckZapret.ViewModels;
-
+﻿using AutoCheckZapret;
 namespace AutoCheckZapret.Models
 {
     /// <summary>
@@ -11,7 +10,7 @@ namespace AutoCheckZapret.Models
         /// <summary>
         /// Последняя выбранная версия Zapret в программе
         /// </summary>
-        public ZapretVersionViewModel LastSelectedZapretVersion { get; set; }
+        public ZapretVersion LastSelectedZapretVersion { get; set; }
 
         /// <summary>
         /// Скачанные версии Zapret (в них также будут данные о подобранных для них обходах)

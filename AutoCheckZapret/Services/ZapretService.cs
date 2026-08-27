@@ -75,7 +75,7 @@ namespace AutoCheckZapret
                         "start \"zapret",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    bypassFiles.Add(file);
+                    bypassFiles.Add(Path.GetFileName(file));
                 }
             }
 
@@ -380,8 +380,8 @@ namespace AutoCheckZapret
         /// <summary>
         /// Создаёт и запускает службу Zapret асинхронно.
         /// </summary>
-        /// <param name="strategyFilePath">
-        /// Путь к BAT-файлу со стратегией обхода.
+        /// <param name="fileName">
+        /// Имя BAT-файла со стратегией обхода.
         /// </param>
         /// <param name="enableTcp">
         /// Если true, перед установкой службы
@@ -395,10 +395,12 @@ namespace AutoCheckZapret
         /// false, если произошла ошибка.
         /// </returns>
         public async Task<bool> InstallServiceAsync(
-            string strategyFilePath,
+            string fileName,
             bool enableTcp = true,
             CancellationToken cancellationToken = default)
         {
+            string strategyFilePath = _folderPath + '\\' + fileName;
+            Debug.Write(strategyFilePath);
             if (enableTcp)
             {
                 await EnableTcpTimestampsAsync(cancellationToken);
