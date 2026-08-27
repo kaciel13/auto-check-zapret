@@ -296,11 +296,11 @@
                         </Grid.ColumnDefinitions>
 
                         <ComboBox x:Name="cbVersions"
-                                  Grid.Column="0"
-                                  MinWidth="44"
-                                  Style="{StaticResource CustomComboBoxStyle}"
-                                  FontSize="16"
-                                  SelectionChanged="VersionsComboBox_SelectionChanged">
+                          Grid.Column="0"
+                          MinWidth="44"
+                          Style="{StaticResource CustomComboBoxStyle}"
+                          FontSize="16"
+                          SelectionChanged="VersionsComboBox_SelectionChanged">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel FlowDirection="LeftToRight" Orientation="Horizontal">
@@ -311,7 +311,20 @@
                                                     <Setter Property="Text" Value=""/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
-                                                            <Setter Property="Text" Value="{Binding BypassMethodName, StringFormat='[Скачана] {0}'}"/>
+                                                            <Setter Property="Text" Value="[Скачана]"/>
+                                                            <Setter Property="Foreground" Value="#83FF87"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Margin="10,0,0,0" Foreground="#FEFEFE">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value=""/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
+                                                            <Setter Property="Text" Value="{Binding BypassMethodName}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>

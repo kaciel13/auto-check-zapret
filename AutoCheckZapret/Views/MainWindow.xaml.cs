@@ -1,5 +1,6 @@
 ﻿using AutoCheckZapret.Models;
 using AutoCheckZapret.Services;
+using AutoCheckZapret.ViewModels;
 using Newtonsoft.Json;
 using System.IO;
 using System.Reflection;
@@ -28,11 +29,11 @@ namespace AutoCheckZapret
         // Токен отмены для процесса подбора обхода (позволяет прервать операцию)
         private CancellationTokenSource _bypassCheckerCtSource;
 
-        // Список всех полученных версий Zapret
-        private List<ZapretVersion> _zapretVersions;
+        // Список всех полученных версий Zapret (ViewModel)
+        private List<ZapretVersionViewModel> _zapretVersionsViewModels;
 
-        // Текущая выбранная пользователем версия
-        private ZapretVersion _selectedVersion;
+        // Текущая выбранная пользователем версия (ViewModel)
+        private ZapretVersionViewModel _selectedVersionViewModel;
 
         // Флаг, указывающий, запущен ли в данный момент Zapret как служба
         private bool _isZapretRunning;
@@ -137,15 +138,16 @@ namespace AutoCheckZapret
             try
             {
                 var models = await _versionsService.FetchAvailableVersions();
-                _zapretVersions = models.ToList();
 
-                // Проверяем, какие версии уже скачаны на диск
-                foreach (var v in _zapretVersions)
-                    v.IsDownloaded = _versionsService.IsZapretVersionDownloaded(v);
+                // Создаем ViewModel для каждой модели
+                _zapretVersionsViewModels = models.Select(m => new ZapretVersionViewModel(m)).ToList();
+
+                foreach (var vm in _zapretVersionsViewModels)
+                    vm.IsDownloaded = _versionsService.IsZapretVersionDownloaded(vm.GetModel());
 
                 // Передаём список в ComboBox
-                cbVersions.ItemsSource = _zapretVersions;
-                _logger.AddSuccess($"Получено {_zapretVersions.Count} версий.", false);
+                cbVersions.ItemsSource = _zapretVersionsViewModels;
+                _logger.AddSuccess($"Получено {_zapretVersionsViewModels.Count} версий.", false);
             }
             catch (Exception ex)
             {
@@ -165,7 +167,7 @@ namespace AutoCheckZapret
         /// </summary>
         private void LoadSavedData()
         {
-            if (!File.Exists(SavedDataFileName) || _zapretVersions == null)
+            if (!File.Exists(SavedDataFileName) || _zapretVersionsViewModels == null)
                 return;
 
             string json = File.ReadAllText(SavedDataFileName);
@@ -187,7 +189,7 @@ namespace AutoCheckZapret
             // Восстанавливаем информацию о скачанных версиях и их методах обхода
             foreach (var savedVersion in savedData.DownloadedZapretVersions)
             {
-                var found = _zapretVersions.FirstOrDefault(v => v.Number == savedVersion.Number);
+                var found = _zapretVersionsViewModels.FirstOrDefault(v => v.Number == savedVersion.Number);
                 if (found != null)
                 {
                     found.BypassMethodName = savedVersion.BypassMethodName;
@@ -198,10 +200,10 @@ namespace AutoCheckZapret
             // Восстанавливаем выбранную версию, если она присутствует в сохранённых данных
             if (savedData.LastSelectedZapretVersion != null)
             {
-                var last = _zapretVersions.FirstOrDefault(v => v.Number == savedData.LastSelectedZapretVersion.Number);
+                var last = _zapretVersionsViewModels.FirstOrDefault(v => v.Number == savedData.LastSelectedZapretVersion.Number);
                 if (last != null)
                 {
-                    _selectedVersion = last;
+                    _selectedVersionViewModel = last;
                     cbVersions.SelectedItem = last;
                 }
             }
@@ -213,13 +215,16 @@ namespace AutoCheckZapret
         /// </summary>
         private void SaveData()
         {
-            if (_zapretVersions == null)
+            if (_zapretVersionsViewModels == null)
                 return;
 
             var data = new SavedApplicationData
             {
-                LastSelectedZapretVersion = _selectedVersion,
-                DownloadedZapretVersions = _zapretVersions.Where(v => v.IsDownloaded).ToList()
+                LastSelectedZapretVersion = _selectedVersionViewModel?.GetModel(),
+                DownloadedZapretVersions = _zapretVersionsViewModels
+                    .Where(v => v.IsDownloaded)
+                    .Select(v => v.GetModel())
+                    .ToList()
             };
 
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
@@ -234,7 +239,7 @@ namespace AutoCheckZapret
         /// </summary>
         private void VersionsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _selectedVersion = cbVersions.SelectedItem as ZapretVersion;
+            _selectedVersionViewModel = cbVersions.SelectedItem as ZapretVersionViewModel;
             UpdateUI();
         }
 
@@ -244,17 +249,18 @@ namespace AutoCheckZapret
         /// </summary>
         private async void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedVersion == null) return;
+            if (_selectedVersionViewModel == null) return;
 
             // Блокируем UI на время операции
             btnDownload.IsEnabled = false;
             cbVersions.IsEnabled = false;
 
-            _logger.AddInfo($"Cкачивание версии Zapret {_selectedVersion.Number}...");
+            var model = _selectedVersionViewModel.GetModel();
+            _logger.AddInfo($"Cкачивание версии Zapret {model.Number}...");
             try
             {
-                await _versionsService.DownloadZapretVersion(_selectedVersion);
-                _selectedVersion.IsDownloaded = true;
+                await _versionsService.DownloadZapretVersion(model);
+                _selectedVersionViewModel.IsDownloaded = true; // Автоматически обновит UI через INotifyPropertyChanged
                 _logger.AddSuccess("Скачивание завершено!", false);
             }
             catch (Exception ex)
@@ -274,28 +280,30 @@ namespace AutoCheckZapret
         /// </summary>
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedVersion == null) return;
+            if (_selectedVersionViewModel == null) return;
 
             // Подтверждение удаления
-            if (MessageBox.Show($"Вы уверены, что хотите удалить Zapret версии {_selectedVersion.Number}?",
+            if (MessageBox.Show($"Вы уверены, что хотите удалить Zapret версии {_selectedVersionViewModel.Number}?",
                                 "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
-            _logger.AddInfo($"Удаление версии Zapret {_selectedVersion.Number}...");
+            _logger.AddInfo($"Удаление версии Zapret {_selectedVersionViewModel.Number}...");
+
+            var model = _selectedVersionViewModel.GetModel();
 
             // Пытаемся удалить папку. Если не удаётся (файлы заблокированы), останавливаем службу и повторяем
-            bool deleted = _versionsService.DeleteZapretVersion(_selectedVersion);
+            bool deleted = _versionsService.DeleteZapretVersion(model);
             if (!deleted)
             {
-                string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\{_selectedVersion.Number}";
+                string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\{model.Number}";
                 var zapretService = new ZapretService(versionPath);
                 await zapretService.RemoveServiceAsync();
-                _versionsService.DeleteZapretVersion(_selectedVersion);
+                _versionsService.DeleteZapretVersion(model);
             }
 
             // Обновляем состояние модели
-            _selectedVersion.IsDownloaded = false;
-            _selectedVersion.BypassMethodName = string.Empty;
+            _selectedVersionViewModel.IsDownloaded = false;
+            _selectedVersionViewModel.BypassMethodName = string.Empty;
             _logger.AddSuccess("Версия удалена.", false);
             UpdateUI();
         }
@@ -306,13 +314,14 @@ namespace AutoCheckZapret
         /// </summary>
         private async void StartStopButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedVersion == null) return;
+            if (_selectedVersionViewModel == null) return;
 
-            string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\{_selectedVersion.Number}";
+            var model = _selectedVersionViewModel.GetModel();
+            string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\{model.Number}";
             var zapretService = new ZapretService(versionPath);
 
             // Если метод обхода ещё не подобран – переходим в режим подбора
-            if (string.IsNullOrWhiteSpace(_selectedVersion.BypassMethodName))
+            if (string.IsNullOrWhiteSpace(_selectedVersionViewModel.BypassMethodName))
             {
                 // Если подбор уже идёт – отменяем его
                 if (_isChoosingBypassMethod)
@@ -330,7 +339,7 @@ namespace AutoCheckZapret
                 UpdateUI();
 
                 _logger.AddInfo("");
-                _logger.AddInfo($"Запущен процесс подбора обхода для Zapret v{_selectedVersion.Number}.");
+                _logger.AddInfo($"Запущен процесс подбора обхода для Zapret v{model.Number}.");
 
                 bool found = false;
                 string methodName = string.Empty;
@@ -353,11 +362,11 @@ namespace AutoCheckZapret
                 {
                     _logger.AddInfo("");
                     _logger.AddSuccess("Найден подходящий обход!");
-                    _selectedVersion.BypassMethodName = methodName;
+                    _selectedVersionViewModel.BypassMethodName = methodName; // Автоматически обновит UI через INotifyPropertyChanged
                 }
                 else
                 {
-                    _logger.AddError($"Не удалось подобрать подходящий обход для версии Zapret {_selectedVersion.Number}...");
+                    _logger.AddError($"Не удалось подобрать подходящий обход для версии Zapret {model.Number}...");
                 }
 
                 _isChoosingBypassMethod = false;
@@ -368,15 +377,15 @@ namespace AutoCheckZapret
                 // Метод обхода уже подобран – запускаем или останавливаем службу
                 if (!_isZapretRunning)
                 {
-                    await zapretService.InstallServiceAsync(_selectedVersion.BypassMethodName);
+                    await zapretService.InstallServiceAsync(_selectedVersionViewModel.BypassMethodName);
                     _isZapretRunning = true;
-                    _logger.AddInfo($"Zapret v{_selectedVersion.Number} запущен. Приятного пользования!");
+                    _logger.AddInfo($"Zapret v{model.Number} запущен. Приятного пользования!");
                 }
                 else
                 {
                     await zapretService.RemoveServiceAsync();
                     _isZapretRunning = false;
-                    _logger.AddInfo($"Zapret v{_selectedVersion.Number} остановлен.");
+                    _logger.AddInfo($"Zapret v{model.Number} остановлен.");
                 }
                 UpdateUI();
             }
@@ -388,21 +397,20 @@ namespace AutoCheckZapret
         /// </summary>
         private void UpdateUI()
         {
-
             // ComboBox доступен, если есть версии или не идёт подбор и Zapret не запущен
-            cbVersions.IsEnabled = _zapretVersions != null && !_isChoosingBypassMethod && !_isZapretRunning;
+            cbVersions.IsEnabled = _zapretVersionsViewModels != null && !_isChoosingBypassMethod && !_isZapretRunning;
 
             // Кнопка скачивания доступна, если выбрана версия, она не скачана, и нет активных процессов
-            btnDownload.IsEnabled = _selectedVersion != null && !_selectedVersion.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
+            btnDownload.IsEnabled = _selectedVersionViewModel != null && !_selectedVersionViewModel.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
 
             // Кнопка удаления доступна, если версия скачана и нет активных процессов
-            btnDelete.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
+            btnDelete.IsEnabled = _selectedVersionViewModel != null && _selectedVersionViewModel.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
 
             // Кнопка StartStop активна, если выбрана версия и она скачана (подбор или запуск/остановка)
-            btnStartStop.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded;
+            btnStartStop.IsEnabled = _selectedVersionViewModel != null && _selectedVersionViewModel.IsDownloaded;
 
             // Определяем текст на кнопке в зависимости от состояния
-            if (_selectedVersion == null)
+            if (_selectedVersionViewModel == null)
             {
                 btnStartStop.Content = "Не выбрана версия Zapret";
                 return;
@@ -414,19 +422,19 @@ namespace AutoCheckZapret
                 return;
             }
 
-            if (!_selectedVersion.IsDownloaded)
+            if (!_selectedVersionViewModel.IsDownloaded)
             {
-                btnStartStop.Content = $"Скачайте Zapret v{_selectedVersion.Number}, чтобы начать работу";
+                btnStartStop.Content = $"Скачайте Zapret v{_selectedVersionViewModel.Number}, чтобы начать работу";
                 btnStartStop.IsEnabled = false;
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(_selectedVersion.BypassMethodName))
-                btnStartStop.Content = $"Подобрать обход для Zapret v{_selectedVersion.Number}";
+            if (string.IsNullOrWhiteSpace(_selectedVersionViewModel.BypassMethodName))
+                btnStartStop.Content = $"Подобрать обход для Zapret v{_selectedVersionViewModel.Number}";
             else
                 btnStartStop.Content = _isZapretRunning
-                    ? $"Остановить Zapret v{_selectedVersion.Number}"
-                    : $"Запустить Zapret v{_selectedVersion.Number}";
+                    ? $"Остановить Zapret v{_selectedVersionViewModel.Number}"
+                    : $"Запустить Zapret v{_selectedVersionViewModel.Number}";
         }
     }
 }
