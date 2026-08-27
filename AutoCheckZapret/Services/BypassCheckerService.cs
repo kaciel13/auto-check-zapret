@@ -29,7 +29,7 @@ namespace AutoCheckZapret.Services
                 bypassMethodName = bypassFiles[i].Substring(index + 1);
                 logger.AddInfo($"Тест обхода \"{bypassMethodName}\" ({i + 1}/{bypassFiles.Count})...");
 
-                bool hasStartedZapret = await zapretService.InstallServiceAsync(bypassFiles[i], true, ct);
+                bool hasStartedZapret = await zapretService.InstallServiceAsync(bypassFiles[i], cancellationToken: ct);
                 if (!hasStartedZapret)
                 {
                     logger.AddError("Не удалось запустить службу Zapret...", false);

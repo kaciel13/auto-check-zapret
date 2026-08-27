@@ -353,7 +353,7 @@
                                 <Image Source="{StaticResource DownloadIcon}" Width="24" Height="24"/>
                             </Button>
                             <Button x:Name="btnDeleteZapretVersion"
-                                    IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"
+                                    IsEnabled="{Binding CanDeleteZapretVersion}"
                                     Command="{Binding DeleteZapretVersionCommand}"
                                     Style="{StaticResource DeleteButtonStyle}">
                                 <Image Source="{StaticResource CloseIcon}" Width="20" Height="20"/>
@@ -367,10 +367,10 @@
                                 Style="{StaticResource ConsoleViewerStyle}" Document="{Binding LogDocument}"/>
                     </Border>
 
-                    <!-- Кнопка выбора метода обхода -->
+                    <!-- Кнопка выбора метода обхода и запуска/остановки выбранного обхода -->
                     <Button Grid.Row="2" Content="{Binding ChooseBypassMethodButtonContent}" Margin="0,0,0,10"
-                            IsEnabled="{Binding CanDeleteOrWorkWithZapretVersion}"
-                            Command="{Binding ChooseBypassMethodForVersionCommand}"
+                            IsEnabled="{Binding CanStartZapretVersion}"
+                            Command="{Binding StartStopVersionCommand}"
                             Style="{StaticResource ChooseButtonStyle}"/>
                 </Grid>
             </Border>
