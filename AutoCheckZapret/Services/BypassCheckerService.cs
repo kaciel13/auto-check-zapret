@@ -17,7 +17,7 @@ namespace AutoCheckZapret.Services
         public static async Task<ValueTuple<bool, string>> FindBypassMethodAsync(ZapretService zapretService, Logger logger, CancellationToken ct)
         {
             List<string> bypassFiles = zapretService.GetBypassFilesFromFolder();
-
+            await zapretService.RemoveServiceAsync(ct);
             for (int i = 0; i < bypassFiles.Count; i++)
             {
                 // Перед началом тестирования каждого обхода проверяем, не отменил ли пользователь подбор обходов
@@ -58,10 +58,10 @@ namespace AutoCheckZapret.Services
                     logger.AddError("Не отвечает...", false);
                 }
 
-                if (isDiscordResponding && isYouTubeResponding)
-                {
-                    return (true, bypassMethodName);
-                }
+                //if (isDiscordResponding && isYouTubeResponding)
+                //{
+                //    return (true, bypassMethodName);
+                //}
 
                 logger.AddError($"Обход \"{bypassMethodName}\" не подходит...");
                 logger.AddInfo("");

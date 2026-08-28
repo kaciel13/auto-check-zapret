@@ -105,10 +105,10 @@ namespace AutoCheckZapret
             {
                 return "Аргументы не найдены";
             }
-
+            
             string rawArg = content[index..];
 
-            rawArg = rawArg
+            rawArg = rawArg.Replace("^!", "!")
                 .Replace("^", " ")
                 .Replace("\r", " ")
                 .Replace("\n", " ");
@@ -123,18 +123,18 @@ namespace AutoCheckZapret
 
             // В BAT-файлах знак "=" используется
             // как разделитель параметра и значения.
-            rawArg = rawArg.Replace('=', ' ');
 
             // Экранирование кавычек для передачи
             // аргументов внешней утилите.
             rawArg = rawArg.Replace("\"", "\\\"");
             rawArg = rawArg
                 .Replace("%LISTS%", listsPath)
-                .Replace("%BIN%", binPath)
+                .Replace("%BIN%", binPath).Replace("%~dp0", "")
                 .Replace("%GameFilterStatus%", _gameFilterStatus)
                 .Replace("%GameFilter%", _gameFilter)
                 .Replace("%GameFilterTCP%", _gameFilterTCP)
                 .Replace("%GameFilterUDP%", _gameFilterUDP);
+            rawArg = System.Text.RegularExpressions.Regex.Replace(rawArg, @"--([a-zA-Z0-9\-]+)=", "--$1 ");
             Debug.WriteLine("Получены аргументы: " + rawArg);
             return rawArg.Trim();
         }
@@ -161,7 +161,8 @@ namespace AutoCheckZapret
                         "list",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    return Path.GetDirectoryName(file) ?? "";
+                    string listPath = Path.GetDirectoryName(file) ?? "";
+                    return Path.GetRelativePath(_folderPath, listPath);
                 }
             }
 
@@ -190,7 +191,7 @@ namespace AutoCheckZapret
                         "winws.exe",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    return Path.GetFullPath(file);
+                    return Path.GetRelativePath(_folderPath, file);
                 }
             }
 
@@ -291,7 +292,7 @@ namespace AutoCheckZapret
 
                 // Асинхронное ожидание завершения процесса с поддержкой отмены
                 await process.WaitForExitAsync(cancellationToken);
-
+                await Task.Delay(100);
                 string output = await outputTask;
                 string errorOutput = await errorTask;
 
@@ -426,7 +427,7 @@ namespace AutoCheckZapret
             }
 
             if (string.IsNullOrEmpty(_winsPath) ||
-                !File.Exists(_winsPath))
+                !File.Exists(Path.Combine(_folderPath,_winsPath)))
             {
                 Debug.WriteLine(
                     $"winws.exe не найден: {_winsPath}");
@@ -436,7 +437,7 @@ namespace AutoCheckZapret
 
             string command =
                 $"create {_serviceName} " +
-                $"binPath= \"\\\"{_winsPath}\\\" {args}\" " +
+                $"binPath= \"cmd.exe /c cd /d \\\"{_folderPath}\\\" && \\\"{_winsPath}\\\" {args}\" " +
                 $"DisplayName= \"{_serviceName}\" " +
                 "start= auto";
 
@@ -494,30 +495,29 @@ namespace AutoCheckZapret
                 return false;
             }
 
-            string strategyName =
-                Path.GetFileNameWithoutExtension(strategyFilePath);
+            //string strategyName =
+            //    Path.GetFileNameWithoutExtension(strategyFilePath);
 
-            string regKey =
-                $@"HKLM\System\CurrentControlSet\Services\{_serviceName}";
+            //string regKey =
+            //    $@"HKLM\System\CurrentControlSet\Services\{_serviceName}";
 
-            ProcessResult registryResult = await RunUtilityAsync(
-                "reg.exe",
-                $"add \"{regKey}\" " +
-                "/v zapret-discord-youtube " +
-                "/t REG_SZ " +
-                $"/d \"{strategyName}\" " +
-                "/f",
-                cancellationToken: cancellationToken);
+            //ProcessResult registryResult = await RunUtilityAsync(
+            //    "reg.exe",
+            //    $"add \"{regKey}\" " +
+            //    "/v zapret-discord-youtube " +
+            //    "/t REG_SZ " +
+            //    $"/d \"{strategyName}\" " +
+            //    "/f",
+            //    cancellationToken: cancellationToken);
 
-            if (registryResult.ExitCode != 0)
-            {
-               Debug.WriteLine(
-                    "Ошибка записи стратегии в реестр.");
-            }
+            //if (registryResult.ExitCode != 0)
+            //{
+            //   Debug.WriteLine(
+            //        "Ошибка записи стратегии в реестр.");
+            //}
 
             Debug.WriteLine(
                 "Служба успешно установлена и запущена.");
-
             return true;
         }
 
@@ -566,7 +566,6 @@ namespace AutoCheckZapret
                     ignoreErrors: true,
                     cancellationToken: cancellationToken);
             }
-
             Debug.WriteLine(
                 "Служба zapret и связанные драйверы удалены.");
         }
