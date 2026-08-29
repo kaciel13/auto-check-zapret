@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.ServiceProcess;
 
 namespace AutoCheckZapret
 {
@@ -105,9 +106,11 @@ namespace AutoCheckZapret
             {
                 return "Аргументы не найдены";
             }
-            
-            string rawArg = content[index..];
 
+            string rawArg = content[index..];
+            rawArg = rawArg.Replace("--hostlist=\"%LISTS%list-general-user.txt\"", "")
+                           .Replace("--hostlist-exclude=\"%LISTS%list-exclude-user.txt\"", "")
+                           .Replace("--ipset-exclude=\"%LISTS%ipset-exclude-user.txt\"", "");
             rawArg = rawArg.Replace("^!", "!")
                 .Replace("^", " ")
                 .Replace("\r", " ")
@@ -126,9 +129,9 @@ namespace AutoCheckZapret
 
             // Экранирование кавычек для передачи
             // аргументов внешней утилите.
+
             rawArg = rawArg.Replace("\"", "\\\"");
-            rawArg = rawArg
-                .Replace("%LISTS%", listsPath)
+            rawArg = rawArg.Replace("%LISTS%", listsPath)
                 .Replace("%BIN%", binPath).Replace("%~dp0", "")
                 .Replace("%GameFilterStatus%", _gameFilterStatus)
                 .Replace("%GameFilter%", _gameFilter)
@@ -244,7 +247,8 @@ namespace AutoCheckZapret
         private async Task<ProcessResult> RunUtilityAsync(
             string fileName,
             string arguments,
-            bool ignoreErrors = false,
+            bool
+            ignoreErrors = false,
             CancellationToken cancellationToken = default)
         {
             try
@@ -427,7 +431,7 @@ namespace AutoCheckZapret
             }
 
             if (string.IsNullOrEmpty(_winsPath) ||
-                !File.Exists(Path.Combine(_folderPath,_winsPath)))
+                !File.Exists(Path.Combine(_folderPath, _winsPath)))
             {
                 Debug.WriteLine(
                     $"winws.exe не найден: {_winsPath}");
@@ -489,8 +493,8 @@ namespace AutoCheckZapret
 
             if (startResult.ExitCode != 0)
             {
-               Debug.WriteLine(
-                    "Не удалось запустить службу.");
+                Debug.WriteLine(
+                     "Не удалось запустить службу.");
 
                 return false;
             }
@@ -512,13 +516,19 @@ namespace AutoCheckZapret
 
             //if (registryResult.ExitCode != 0)
             //{
-            //   Debug.WriteLine(
-            //        "Ошибка записи стратегии в реестр.");
+            //    Debug.WriteLine(
+            //         "Ошибка записи стратегии в реестр.");
             //}
+            ProcessResult res = await RunUtilityAsync(
+                "sc.exe",
+                $"query \"{_serviceName}\"",
+                ignoreErrors: true,
+                cancellationToken: cancellationToken);
 
-            Debug.WriteLine(
-                "Служба успешно установлена и запущена.");
-            return true;
+            bool started = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
+            await Task.Delay(1000);
+            Debug.WriteLine(res.Output, res.Error, res.ExitCode);
+            return started;
         }
 
         /// <summary>
@@ -566,8 +576,32 @@ namespace AutoCheckZapret
                     ignoreErrors: true,
                     cancellationToken: cancellationToken);
             }
-            Debug.WriteLine(
+            bool removed = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
+            await Task.Delay(1000);
+            Debug.WriteLineIf(removed,
                 "Служба zapret и связанные драйверы удалены.");
+            Debug.WriteLineIf(!removed, "Ошибка завершения службы");
+        }
+
+        public async Task<bool> WaitForServiceStatusAsync(string serviceName, ServiceControllerStatus desiredStatus, TimeSpan timeout)
+        {
+            try
+            {
+                using (ServiceController sc = new ServiceController(serviceName))
+                {
+                    if (sc.Status == desiredStatus)
+                        return true;
+
+                    // WaitForStatus — синхронный, поэтому оборачиваем в Task.Run
+                    await Task.Run(() => sc.WaitForStatus(desiredStatus, timeout));
+                    return sc.Status == desiredStatus;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при ожидании статуса службы '{serviceName}': {ex.Message}");
+                return false;
+            }
         }
     }
 }
