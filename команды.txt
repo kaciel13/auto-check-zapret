@@ -1,3 +1,0 @@
---Выключение служб--
-net stop zapret
-net stop WinDivert
