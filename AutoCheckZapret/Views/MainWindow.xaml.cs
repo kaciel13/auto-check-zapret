@@ -39,6 +39,9 @@ namespace AutoCheckZapret
         // Флаг, указывающий, идёт ли в данный момент процесс подбора обхода
         private bool _isChoosingBypassMethod;
 
+        // Флаг, указывающий, идёт ли в данный момент процесс отмены подбора обхода
+        private bool _isCancelChoosingBypassMethod;
+
         // Имя файла для сохранения данных приложения (настройки, выбранная версия, подобранные обходы)
         private const string SavedDataFileName = "appdata.json";
 
@@ -314,79 +317,99 @@ namespace AutoCheckZapret
         {
             if (_selectedVersionViewModel == null) return;
 
+            if (_isChoosingBypassMethod)
+            {
+                _logger.AddInfo("Отмена процесса подбора...");
+                _isCancelChoosingBypassMethod = true;
+                UpdateUI();
+                _bypassCheckerCtSource?.Cancel();
+                return;
+            }
+
             var model = _selectedVersionViewModel.GetModel();
             string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\{model.Number}";
             var zapretService = new ZapretService(versionPath);
 
-            // Если метод обхода ещё не подобран – переходим в режим подбора
-            if (string.IsNullOrWhiteSpace(_selectedVersionViewModel.BypassMethodName))
+            // 1. Если служба уже запущена – останавливаем
+            if (_isZapretRunning)
             {
-                // Если подбор уже идёт – отменяем его
-                if (_isChoosingBypassMethod)
-                {
-                    _bypassCheckerCtSource.Cancel();
-                    _isChoosingBypassMethod = false;
-                    _logger.AddInfo("Отмена процесса подбора обхода...");
-                    _logger.AddInfo("");
-                    UpdateUI();
-                    return;
-                }
+                await zapretService.RemoveServiceAsync();
+                _logger.AddInfo($"Zapret v{model.Number} остановлен.");
+                _isZapretRunning = false;
+                UpdateUI();
+                return;
+            }
 
-                // Начинаем подбор
-                _isChoosingBypassMethod = true;
+            // 2. Служба не запущена – пытаемся запустить
+            // Проверяем, выбран ли метод обхода
+            if (!string.IsNullOrWhiteSpace(_selectedVersionViewModel.BypassMethodName))
+            {
+                // Проверяем работоспособность выбранного метода
                 UpdateUI();
 
-                _logger.AddInfo("");
-                _logger.AddInfo($"Запущен процесс подбора обхода для Zapret v{model.Number}.");
+                _logger.AddInfo($"Проверка обхода \"{_selectedVersionViewModel.BypassMethodName}\"...");
 
-                bool found = false;
-                string methodName = string.Empty;
-                try
+                (bool success, string _) = await BypassCheckerService.TestSingleBypassAsync(
+                    zapretService,
+                    _selectedVersionViewModel.BypassMethodName,
+                    _logger,
+                    _bypassCheckerCtSource.Token);
+
+                if (success)
                 {
-                    (found, methodName) = await BypassCheckerService.FindBypassMethodAsync(
-                        zapretService, _logger, _bypassCheckerCtSource.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    // Подбор был отменён пользователем – создаём новый токен для будущих операций
-                    _bypassCheckerCtSource = new CancellationTokenSource();
-                    _logger.AddInfo("Процесс подбора обхода отменён.");
-                    _isChoosingBypassMethod = false;
+                    // Служба уже установлена и запущена (TestSingleBypassAsync оставляет её активной)
+                    _isZapretRunning = true;
+                    _logger.AddInfo($"Zapret v{model.Number} запущен. Приятного пользования!");
                     UpdateUI();
                     return;
                 }
 
-                if (found)
-                {
-                    _logger.AddInfo("");
-                    _logger.AddSuccess("Найден подходящий обход!");
-                    _selectedVersionViewModel.BypassMethodName = methodName; // Автоматически обновит UI через INotifyPropertyChanged
-                }
-                else
-                {
-                    _logger.AddError($"Не удалось подобрать подходящий обход для версии Zapret {model.Number}...");
-                }
+                // Обход не работает – сбрасываем имя и переходим к подбору
+                _logger.AddError($"Обход \"{_selectedVersionViewModel.BypassMethodName}\" не работает. Будет выполнен автоматический подбор.");
+                _selectedVersionViewModel.BypassMethodName = null;
+            }
 
+            // 3. Общий блок подбора (выполняется, если метод не выбран или был сброшен)
+            _isChoosingBypassMethod = true;
+            UpdateUI();
+
+            _logger.AddInfo("");
+            _logger.AddInfo($"Запущен процесс подбора обхода для Zapret v{model.Number}.");
+
+            bool found = false;
+            string methodName = string.Empty;
+            try
+            {
+                (found, methodName) = await BypassCheckerService.FindBypassMethodAsync(
+                    zapretService, _logger, _bypassCheckerCtSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Отмена подбора пользователем
+                _bypassCheckerCtSource = new CancellationTokenSource(); // сброс токена
+                _logger.AddInfo("Процесс подбора обхода отменён.");
                 _isChoosingBypassMethod = false;
+                _isCancelChoosingBypassMethod = false;
                 UpdateUI();
+                return;
+            }
+
+            if (found)
+            {
+                _logger.AddInfo("");
+                _logger.AddSuccess("Найден подходящий обход!");
+                _selectedVersionViewModel.BypassMethodName = methodName;
+                // Служба уже запущена (FindBypassMethodAsync оставляет её активной)
+                _isZapretRunning = true;
+                _logger.AddInfo($"Zapret v{model.Number} запущен. Приятного пользования!");
             }
             else
             {
-                // Метод обхода уже подобран – запускаем или останавливаем службу
-                if (!_isZapretRunning)
-                {
-                    await zapretService.InstallServiceAsync(_selectedVersionViewModel.BypassMethodName);
-                    _isZapretRunning = true;
-                    _logger.AddInfo($"Zapret v{model.Number} запущен. Приятного пользования!");
-                }
-                else
-                {
-                    await zapretService.RemoveServiceAsync();
-                    _isZapretRunning = false;
-                    _logger.AddInfo($"Zapret v{model.Number} остановлен.");
-                }
-                UpdateUI();
+                _logger.AddError($"Не удалось подобрать подходящий обход для версии Zapret {model.Number}...");
             }
+
+            _isChoosingBypassMethod = false;
+            UpdateUI();
         }
 
         /// <summary>
@@ -405,7 +428,7 @@ namespace AutoCheckZapret
             btnDelete.IsEnabled = _selectedVersionViewModel != null && _selectedVersionViewModel.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
 
             // Кнопка StartStop активна, если выбрана версия и она скачана (подбор или запуск/остановка)
-            btnStartStop.IsEnabled = _selectedVersionViewModel != null && _selectedVersionViewModel.IsDownloaded;
+            btnStartStop.IsEnabled = _selectedVersionViewModel != null && _selectedVersionViewModel.IsDownloaded && !_isCancelChoosingBypassMethod;
 
             // Определяем текст на кнопке в зависимости от состояния
             if (_selectedVersionViewModel == null)
