@@ -1,4 +1,5 @@
-﻿using AutoCheckZapret.Models;
+﻿using AutoCheckZapret.Helpers;
+using AutoCheckZapret.Models;
 using AutoCheckZapret.Services;
 using AutoCheckZapret.ViewModels;
 using Newtonsoft.Json;
@@ -22,9 +23,6 @@ namespace AutoCheckZapret
 
         // Сервис для получения списка версий, скачивания и удаления
         private ZapretVersionsService _versionsService;
-
-        // Сервис проверки обновлений приложения
-        private Updater _updater;
 
         // Токен отмены для процесса подбора обхода (позволяет прервать операцию)
         private CancellationTokenSource _bypassCheckerCtSource;
@@ -60,7 +58,7 @@ namespace AutoCheckZapret
 
             // Инициализация сервисов
             _versionsService = new ZapretVersionsService();
-            _updater = new Updater();
+
             _bypassCheckerCtSource = new CancellationTokenSource();
 
             // Определяем версию приложения из сборки и отображаем в заголовке
@@ -69,7 +67,7 @@ namespace AutoCheckZapret
             lbTitle.Content = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
 
             // Проверяем наличие обновлений (асинхронно, но не блокируем)
-            _updater.CheckUpdate();
+            Updater.CheckUpdate();
 
             // Запускаем асинхронную загрузку списка доступных версий Zapret
             _ = FetchAvailableVersions();
