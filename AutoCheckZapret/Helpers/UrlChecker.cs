@@ -16,7 +16,7 @@ namespace AutoCheckZapret.Helpers
         /// <param name="url">URL-адрес</param>
         /// <param name="timeoutSeconds">Таймаут в секундах</param>
         /// <returns>true - запрашиваемый ресурс ответил, false - запрашиваемый ресурс не отвечает</returns>
-        public static async Task<bool> IsUrlRespondingAsync(string url, int timeoutSeconds = 3)
+        public static async Task<bool> IsUrlRespondingAsync(string url, int timeoutSeconds = 10)
         {
             try
             {
