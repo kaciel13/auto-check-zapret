@@ -5,31 +5,31 @@ using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 
-
-namespace AutoCheckZapret.Services
+namespace AutoCheckZapret.Helpers
 {
-    internal class Updater
+    public static class Updater
     {
-
-        public void CheckUpdate()
+        public static async void CheckUpdate()
         {
-            if (!OK())
+            if (!await OKAsync())
             {
                 MessageBox.Show("Нет подключения к GitHub", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
             Assembly assembly = Assembly.GetExecutingAssembly();
             AssemblyName assemblyName = assembly.GetName();
             Version version = assemblyName.Version!;
             string currentVersion = $"{version.Major}.{version.Minor}.{version.Build}";
-
 
             using (WebClient wc = new WebClient())
             {
                 try
                 {
                     wc.Headers.Add(HttpRequestHeader.UserAgent, $"AutoCheckZapret/{currentVersion}");
-                    string jsonString = wc.DownloadString("https://api.github.com/repos/kaciel13/auto-check-zapret/releases/latest");
+
+                    string jsonString = await wc.DownloadStringTaskAsync("https://api.github.com/repos/kaciel13/auto-check-zapret/releases/latest");
+
                     JsonDocument json = JsonDocument.Parse(jsonString);
                     string lastVersion = json.RootElement.GetProperty("tag_name").GetString();
 
@@ -40,13 +40,8 @@ namespace AutoCheckZapret.Services
                         {
                             try
                             {
-
-                                string downloadUrl = $"https://github.com/kaciel13/auto-check-zapret/releases/download/{lastVersion}/AutoCheckZapret.x64.zip";
-
-
+                                string downloadUrl = $"https://github.com/kaciel13/auto-check-zapret/releases/download/{lastVersion}/ACZ.zip";
                                 string appDir = AppDomain.CurrentDomain.BaseDirectory;
-
-
                                 string batPath = Path.Combine(appDir, "Helpers", "update.bat");
 
                                 if (!File.Exists(batPath))
@@ -54,7 +49,6 @@ namespace AutoCheckZapret.Services
                                     MessageBox.Show($"Файл обновления не найден: {batPath}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
-
 
                                 ProcessStartInfo psi = new ProcessStartInfo
                                 {
@@ -66,8 +60,6 @@ namespace AutoCheckZapret.Services
                                     UseShellExecute = true
                                 };
                                 Process.Start(psi);
-
-
                                 Environment.Exit(0);
                             }
                             catch (Exception ex)
@@ -76,18 +68,19 @@ namespace AutoCheckZapret.Services
                             }
                         }
                     }
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     MessageBox.Show($"Ошибка обновления: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-              
             }
         }
-        public static bool OK()
+
+        public static async Task<bool> OKAsync()
         {
             try
             {
-                Dns.GetHostEntry("github.com");
+                await Dns.GetHostEntryAsync("github.com");
                 return true;
             }
             catch

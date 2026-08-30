@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.ServiceProcess;
 
 namespace AutoCheckZapret
 {
@@ -107,8 +108,10 @@ namespace AutoCheckZapret
             }
 
             string rawArg = content[index..];
-
-            rawArg = rawArg
+            rawArg = rawArg.Replace("--hostlist=\"%LISTS%list-general-user.txt\"", "")
+                           .Replace("--hostlist-exclude=\"%LISTS%list-exclude-user.txt\"", "")
+                           .Replace("--ipset-exclude=\"%LISTS%ipset-exclude-user.txt\"", "");
+            rawArg = rawArg.Replace("^!", "!")
                 .Replace("^", " ")
                 .Replace("\r", " ")
                 .Replace("\n", " ");
@@ -123,18 +126,18 @@ namespace AutoCheckZapret
 
             // В BAT-файлах знак "=" используется
             // как разделитель параметра и значения.
-            rawArg = rawArg.Replace('=', ' ');
 
             // Экранирование кавычек для передачи
             // аргументов внешней утилите.
+
             rawArg = rawArg.Replace("\"", "\\\"");
-            rawArg = rawArg
-                .Replace("%LISTS%", listsPath)
-                .Replace("%BIN%", binPath)
+            rawArg = rawArg.Replace("%LISTS%", listsPath)
+                .Replace("%BIN%", binPath).Replace("%~dp0", "")
                 .Replace("%GameFilterStatus%", _gameFilterStatus)
                 .Replace("%GameFilter%", _gameFilter)
                 .Replace("%GameFilterTCP%", _gameFilterTCP)
                 .Replace("%GameFilterUDP%", _gameFilterUDP);
+            rawArg = System.Text.RegularExpressions.Regex.Replace(rawArg, @"--([a-zA-Z0-9\-]+)=", "--$1 ");
             Debug.WriteLine("Получены аргументы: " + rawArg);
             return rawArg.Trim();
         }
@@ -161,7 +164,8 @@ namespace AutoCheckZapret
                         "list",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    return Path.GetDirectoryName(file) ?? "";
+                    string listPath = Path.GetDirectoryName(file) ?? "";
+                    return Path.GetRelativePath(_folderPath, listPath);
                 }
             }
 
@@ -190,7 +194,7 @@ namespace AutoCheckZapret
                         "winws.exe",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    return Path.GetFullPath(file);
+                    return Path.GetRelativePath(_folderPath, file);
                 }
             }
 
@@ -243,7 +247,8 @@ namespace AutoCheckZapret
         private async Task<ProcessResult> RunUtilityAsync(
             string fileName,
             string arguments,
-            bool ignoreErrors = false,
+            bool
+            ignoreErrors = false,
             CancellationToken cancellationToken = default)
         {
             try
@@ -291,7 +296,7 @@ namespace AutoCheckZapret
 
                 // Асинхронное ожидание завершения процесса с поддержкой отмены
                 await process.WaitForExitAsync(cancellationToken);
-
+                await Task.Delay(100);
                 string output = await outputTask;
                 string errorOutput = await errorTask;
 
@@ -426,7 +431,7 @@ namespace AutoCheckZapret
             }
 
             if (string.IsNullOrEmpty(_winsPath) ||
-                !File.Exists(_winsPath))
+                !File.Exists(Path.Combine(_folderPath, _winsPath)))
             {
                 Debug.WriteLine(
                     $"winws.exe не найден: {_winsPath}");
@@ -436,7 +441,7 @@ namespace AutoCheckZapret
 
             string command =
                 $"create {_serviceName} " +
-                $"binPath= \"\\\"{_winsPath}\\\" {args}\" " +
+                $"binPath= \"cmd.exe /c cd /d \\\"{_folderPath}\\\" && \\\"{_winsPath}\\\" {args}\" " +
                 $"DisplayName= \"{_serviceName}\" " +
                 "start= auto";
 
@@ -488,37 +493,46 @@ namespace AutoCheckZapret
 
             if (startResult.ExitCode != 0)
             {
-               Debug.WriteLine(
-                    "Не удалось запустить службу.");
+                Debug.WriteLine(
+                     "Не удалось запустить службу.");
 
                 return false;
             }
 
-            string strategyName =
-                Path.GetFileNameWithoutExtension(strategyFilePath);
+            //string strategyName =
+            //    Path.GetFileNameWithoutExtension(strategyFilePath);
 
-            string regKey =
-                $@"HKLM\System\CurrentControlSet\Services\{_serviceName}";
+            //string regKey =
+            //    $@"HKLM\System\CurrentControlSet\Services\{_serviceName}";
 
-            ProcessResult registryResult = await RunUtilityAsync(
-                "reg.exe",
-                $"add \"{regKey}\" " +
-                "/v zapret-discord-youtube " +
-                "/t REG_SZ " +
-                $"/d \"{strategyName}\" " +
-                "/f",
+            //ProcessResult registryResult = await RunUtilityAsync(
+            //    "reg.exe",
+            //    $"add \"{regKey}\" " +
+            //    "/v zapret-discord-youtube " +
+            //    "/t REG_SZ " +
+            //    $"/d \"{strategyName}\" " +
+            //    "/f",
+            //    cancellationToken: cancellationToken);
+
+            //if (registryResult.ExitCode != 0)
+            //{
+            //    Debug.WriteLine(
+            //         "Ошибка записи стратегии в реестр.");
+            //}
+            ProcessResult res = await RunUtilityAsync(
+                "sc.exe",
+                $"query \"{_serviceName}\"",
+                ignoreErrors: true,
                 cancellationToken: cancellationToken);
 
-            if (registryResult.ExitCode != 0)
-            {
-               Debug.WriteLine(
-                    "Ошибка записи стратегии в реестр.");
-            }
+            bool serviceStarted = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
+            bool processStarted = await WaitForProcessAsync("winws", TimeSpan.FromSeconds(15),cancellationToken);
+            
+            await Task.Delay(2000);
+            
+            Debug.WriteLine(res.Output, res.Error, res.ExitCode);
 
-            Debug.WriteLine(
-                "Служба успешно установлена и запущена.");
-
-            return true;
+            return serviceStarted & processStarted;
         }
 
         /// <summary>
@@ -533,6 +547,8 @@ namespace AutoCheckZapret
                 $"stop \"{_serviceName}\"",
                 ignoreErrors: true,
                 cancellationToken: cancellationToken);
+
+            await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
 
             await RunUtilityAsync(
                 "sc.exe",
@@ -559,6 +575,8 @@ namespace AutoCheckZapret
                     $"stop \"{service}\"",
                     ignoreErrors: true,
                     cancellationToken: cancellationToken);
+                
+                await WaitForServiceStatusAsync(service, ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
 
                 await RunUtilityAsync(
                     "sc.exe",
@@ -566,9 +584,72 @@ namespace AutoCheckZapret
                     ignoreErrors: true,
                     cancellationToken: cancellationToken);
             }
-
-            Debug.WriteLine(
+            bool removed = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
+            await Task.Delay(500);
+            Debug.WriteLineIf(!removed,
                 "Служба zapret и связанные драйверы удалены.");
+            Debug.WriteLineIf(removed, "Ошибка завершения службы");
+        }
+
+
+        /// <summary>
+        /// Ожидает указанный статус у сервиса в течение заданного времени.
+        /// </summary>
+        /// <param name="serviceName">Имя сервиса</param>
+        /// <param name="desiredStatus">Ожидаймый статус</param>
+        /// <param name="timeout">Время ожидния</param>
+        /// <returns>true, если дождались нужного статуса; иначе false.</returns>
+        public async Task<bool> WaitForServiceStatusAsync(string serviceName, ServiceControllerStatus desiredStatus, TimeSpan timeout)
+        {
+            try
+            {
+                using (ServiceController sc = new ServiceController(serviceName))
+                {
+                    if (sc.Status == desiredStatus)
+                        return true;
+
+                    // WaitForStatus — синхронный, поэтому оборачиваем в Task.Run
+                    await Task.Run(() => sc.WaitForStatus(desiredStatus, timeout));
+                    return sc.Status == desiredStatus;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при ожидании статуса службы '{serviceName}': {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Ожидает появления процесса с указанным именем в течение заданного времени.
+        /// </summary>
+        /// <param name="processName">Имя процесса без расширения (например, "winws").</param>
+        /// <param name="timeout">Максимальное время ожидания.</param>
+        /// <param name="cancellationToken">Токен отмены.</param>
+        /// <returns>true, если процесс обнаружен до истечения таймаута; иначе false.</returns>
+        private async Task<bool> WaitForProcessAsync(
+            string processName,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            while (stopwatch.Elapsed < timeout)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Проверяем наличие процесса (без учёта регистра и расширения)
+                Process[] processes = Process.GetProcessesByName(processName);
+                if (processes.Length > 0)
+                {
+                    return true;
+                }
+
+                // Небольшая пауза перед следующей проверкой
+                await Task.Delay(200, cancellationToken);
+            }
+
+            return false;
         }
     }
 }
