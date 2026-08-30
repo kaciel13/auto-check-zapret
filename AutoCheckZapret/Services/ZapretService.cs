@@ -525,10 +525,14 @@ namespace AutoCheckZapret
                 ignoreErrors: true,
                 cancellationToken: cancellationToken);
 
-            bool started = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
-            await Task.Delay(1000);
+            bool serviceStarted = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
+            bool processStarted = await WaitForProcessAsync("winws", TimeSpan.FromSeconds(15),cancellationToken);
+            
+            await Task.Delay(2000);
+            
             Debug.WriteLine(res.Output, res.Error, res.ExitCode);
-            return started;
+
+            return serviceStarted & processStarted;
         }
 
         /// <summary>
@@ -543,6 +547,8 @@ namespace AutoCheckZapret
                 $"stop \"{_serviceName}\"",
                 ignoreErrors: true,
                 cancellationToken: cancellationToken);
+
+            await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
 
             await RunUtilityAsync(
                 "sc.exe",
@@ -569,6 +575,8 @@ namespace AutoCheckZapret
                     $"stop \"{service}\"",
                     ignoreErrors: true,
                     cancellationToken: cancellationToken);
+                
+                await WaitForServiceStatusAsync(service, ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
 
                 await RunUtilityAsync(
                     "sc.exe",
@@ -576,13 +584,21 @@ namespace AutoCheckZapret
                     ignoreErrors: true,
                     cancellationToken: cancellationToken);
             }
-            bool removed = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
-            await Task.Delay(1000);
-            Debug.WriteLineIf(removed,
+            bool removed = await WaitForServiceStatusAsync(_serviceName, ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
+            await Task.Delay(500);
+            Debug.WriteLineIf(!removed,
                 "Служба zapret и связанные драйверы удалены.");
-            Debug.WriteLineIf(!removed, "Ошибка завершения службы");
+            Debug.WriteLineIf(removed, "Ошибка завершения службы");
         }
 
+
+        /// <summary>
+        /// Ожидает указанный статус у сервиса в течение заданного времени.
+        /// </summary>
+        /// <param name="serviceName">Имя сервиса</param>
+        /// <param name="desiredStatus">Ожидаймый статус</param>
+        /// <param name="timeout">Время ожидния</param>
+        /// <returns>true, если дождались нужного статуса; иначе false.</returns>
         public async Task<bool> WaitForServiceStatusAsync(string serviceName, ServiceControllerStatus desiredStatus, TimeSpan timeout)
         {
             try
@@ -602,6 +618,38 @@ namespace AutoCheckZapret
                 Console.WriteLine($"Ошибка при ожидании статуса службы '{serviceName}': {ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Ожидает появления процесса с указанным именем в течение заданного времени.
+        /// </summary>
+        /// <param name="processName">Имя процесса без расширения (например, "winws").</param>
+        /// <param name="timeout">Максимальное время ожидания.</param>
+        /// <param name="cancellationToken">Токен отмены.</param>
+        /// <returns>true, если процесс обнаружен до истечения таймаута; иначе false.</returns>
+        private async Task<bool> WaitForProcessAsync(
+            string processName,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            while (stopwatch.Elapsed < timeout)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Проверяем наличие процесса (без учёта регистра и расширения)
+                Process[] processes = Process.GetProcessesByName(processName);
+                if (processes.Length > 0)
+                {
+                    return true;
+                }
+
+                // Небольшая пауза перед следующей проверкой
+                await Task.Delay(200, cancellationToken);
+            }
+
+            return false;
         }
     }
 }
