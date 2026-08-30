@@ -1,39 +1,93 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace AutoCheckZapret.Helpers
 {
-    /// <summary>
-    /// Служебный класс для проверки доступности URL-адресов
-    /// </summary>
     public static class UrlChecker
     {
-        private static readonly HttpClient client = new HttpClient();
+        private static readonly SocketsHttpHandler handler = new()
+        {
+            UseProxy = false,
+            AllowAutoRedirect = false,
 
-        /// <summary>
-        /// Отвечает ли запрашиваемый URL-адрес
-        /// </summary>
-        /// <param name="url">URL-адрес</param>
-        /// <param name="timeoutSeconds">Таймаут в секундах</param>
-        /// <returns>true - запрашиваемый ресурс ответил, false - запрашиваемый ресурс не отвечает</returns>
-        public static async Task<bool> IsUrlRespondingAsync(string url, int timeoutSeconds = 10)
+            // Не использовать старые соединения
+            PooledConnectionLifetime = TimeSpan.Zero,
+            PooledConnectionIdleTimeout = TimeSpan.Zero
+        };
+
+        private static readonly HttpClient client = new(handler);
+
+        public static async Task<bool> IsUrlRespondingAsync(
+            string url,
+            int timeoutSeconds = 10)
         {
             try
             {
-                // Use a cancellation token to enforce a quick timeout
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+                using var request = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    url)
+                {
+                    // Принудительно используем HTTP/1.1
+                    Version = HttpVersion.Version11,
+                    VersionPolicy = HttpVersionPolicy.RequestVersionExact
+                };
 
-                Debug.WriteLine("Тест " + url);
-                
-                // Отправляем Get запрос хосту
-                HttpResponseMessage response = await client.GetAsync(url, cts.Token);
+                // Закрыть соединение после этого запроса
+                request.Headers.ConnectionClose = true;
 
-                // Возвращаем статус хоста
-                return response.IsSuccessStatusCode;
+                request.Headers.CacheControl = new CacheControlHeaderValue
+                {
+                    NoCache = true,
+                    NoStore = true,
+                    MustRevalidate = true,
+                    MaxAge = TimeSpan.Zero
+                };
+
+                request.Headers.Pragma.ParseAdd("no-cache");
+
+                using var cts = new CancellationTokenSource(
+                    TimeSpan.FromSeconds(timeoutSeconds));
+
+                Debug.WriteLine($"Тест: {url}");
+
+                using var response = await client.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cts.Token);
+
+                Debug.WriteLine(
+                    $"{url} Ответ: {(int)response.StatusCode} {response.StatusCode}");
+
+                foreach (var header in response.Headers)
+                {
+                    Debug.WriteLine(
+                        $"{header.Key}: {string.Join(", ", header.Value)}");
+                }
+
+                foreach (var header in response.Content.Headers)
+                {
+                    Debug.WriteLine(
+                        $"{header.Key}: {string.Join(", ", header.Value)}");
+                }
+
+                // Любой ответ сервера считается валидным
+                return true;
             }
-            catch (Exception)
+            catch (OperationCanceledException)
             {
-                // Fails if there is a timeout, DNS error, 404, or network issue
+                Debug.WriteLine($"Тайм-аут: {url}");
+                return false;
+            }
+            catch (HttpRequestException ex)
+            {
+                Debug.WriteLine($"Ошибка HTTP: {ex.Message}");
+                return false;
+            }
+            catch (UriFormatException ex)
+            {
+                Debug.WriteLine($"Некорректный URL: {ex.Message}");
                 return false;
             }
         }

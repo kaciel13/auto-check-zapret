@@ -1,73 +1,129 @@
 ﻿using AutoCheckZapret.Helpers;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace AutoCheckZapret.Services
 {
-    /// <summary>
-    /// Сервис для подбора (проверки работоспособности) обходов для выбранной версии Zapret
-    /// </summary>
     public static class BypassCheckerService
     {
         /// <summary>
-        /// Найти подходящий обход из списка обходов в версии Zapret
+        /// Найти подходящий обход из списка обходов в версии Zapret.
+        /// Использует <see cref="TestSingleBypassAsync"/> для проверки каждого файла.
         /// </summary>
-        /// <param name="zapretService">Сервис для нахождения .bat-файлов с обходами, их запуска (установки служб Zapret) и закрытия (удаления служб Zapret)</param>
-        /// <param name="logger">Объект логгера</param>
-        /// <param name="ct">Токен отмены. Используется для остановки процесса подбора обхода</param>
-        /// <returns>bool - удалось ли подобрать подходящий обход из списка, string - название .bat-файла с подходящим обходом (если подходящий найден)</returns>
-        public static async Task<ValueTuple<bool, string>> FindBypassMethodAsync(ZapretService zapretService, Logger logger, CancellationToken ct)
+        public static async Task<(bool Success, string BypassName)> FindBypassMethodAsync(
+            ZapretService zapretService,
+            Logger logger,
+            CancellationToken ct)
         {
             List<string> bypassFiles = zapretService.GetBypassFilesFromFolder();
             await zapretService.RemoveServiceAsync(ct);
+
             for (int i = 0; i < bypassFiles.Count; i++)
             {
-                // Перед началом тестирования каждого обхода проверяем, не отменил ли пользователь подбор обходов
-                await zapretService.RemoveServiceAsync(ct);
                 ct.ThrowIfCancellationRequested();
 
-                string bypassMethodName = string.Empty;
-                int index = bypassFiles[i].LastIndexOf("\\");
-                bypassMethodName = bypassFiles[i].Substring(index + 1);
-                logger.AddInfo($"Тест обхода \"{bypassMethodName}\" ({i + 1}/{bypassFiles.Count})...");
+                string fullPath = bypassFiles[i];
+                string fileName = Path.GetFileName(fullPath);
+                logger.AddInfo($"Тест обхода \"{fileName}\" ({i + 1}/{bypassFiles.Count})...");
 
-                bool hasStartedZapret = await zapretService.InstallServiceAsync(bypassFiles[i], cancellationToken: ct);
-                if (!hasStartedZapret)
-                {
-                    logger.AddError("Не удалось запустить службу Zapret...", false);
-                    continue;
-                }
+                (bool success, string _) = await TestSingleBypassAsync(
+                    zapretService,
+                    fileName, 
+                    logger,
+                    ct);
 
-                logger.AddInfo("    Проверка Discord...");
-                bool isDiscordResponding = await UrlChecker.IsUrlRespondingAsync("http://discord.com");
-                if (isDiscordResponding)
-                {
-                    logger.AddSuccess("Работает!", false);
-                }
-                else
-                {
-                    logger.AddError("Не отвечает...", false);
-                }
+                if (success)
+                    return (true, fileName);
 
-                logger.AddInfo("    Проверка YouTube...");
-                bool isYouTubeResponding = await UrlChecker.IsUrlRespondingAsync("https://www.youtube.com");
-                if (isYouTubeResponding)
-                {
-                    logger.AddSuccess("Работает!", false);
-                }
-                else
-                {
-                    logger.AddError("Не отвечает...", false);
-                }
-
-                //if (isDiscordResponding && isYouTubeResponding)
-                //{
-                //    return (true, bypassMethodName);
-                //}
-
-                logger.AddError($"Обход \"{bypassMethodName}\" не подходит...");
+                await zapretService.RemoveServiceAsync(ct);
                 logger.AddInfo("");
             }
 
             return (false, string.Empty);
+        }
+
+        /// <summary>
+        /// Проверить работоспособность одного указанного обхода.
+        /// </summary>
+        /// <param name="zapretService">Сервис для установки/удаления служб</param>
+        /// <param name="bypassMethodName">Имя .bat-файла обхода (без пути)</param>
+        /// <param name="logger">Логгер</param>
+        /// <param name="ct">Токен отмены</param>
+        public static async Task<(bool Success, string BypassName)> TestSingleBypassAsync(
+            ZapretService zapretService,
+            string bypassMethodName,
+            Logger logger,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(bypassMethodName))
+            {
+                logger.AddError("Имя файла обхода не указано.");
+                return (false, string.Empty);
+            }
+
+            logger.AddInfo($"Тестирование обхода \"{bypassMethodName}\"...");
+
+            await zapretService.RemoveServiceAsync(ct);
+            ct.ThrowIfCancellationRequested();
+
+            bool serviceInstalled = false;
+            bool success = false;
+            try
+            {
+                serviceInstalled = await zapretService.InstallServiceAsync(bypassMethodName, cancellationToken: ct);
+                if (!serviceInstalled)
+                {
+                    logger.AddError("Не удалось запустить службу Zapret для данного обхода.", false);
+                    return (false, bypassMethodName);
+                }
+
+                string[] urlsToCheck = new[]
+                {
+                    "https://discord.com",
+                    "https://gateway.discord.gg",
+                    "https://cdn.discordapp.com",
+                    "https://updates.discord.com",
+                    "https://www.youtube.com",
+                    "https://youtu.be",
+                    "https://i.ytimg.com",
+                    "https://redirector.googlevideo.com",
+                    "https://www.google.com",
+                };
+
+                logger.AddInfo("   Проверка доступности сервисов...");
+                var tasks = urlsToCheck.Select(url => UrlChecker.IsUrlRespondingAsync(url, 10)).ToArray();
+                bool[] results = await Task.WhenAll(tasks);
+
+                bool allOk = true;
+                for (int i = 0; i < urlsToCheck.Length; i++)
+                {
+                    bool ok = results[i];
+                    string host = new Uri(urlsToCheck[i]).Host;
+                    if (ok)
+                        logger.AddSuccess($"   {host} работает!");
+                    else
+                    {
+                        logger.AddError($"   {host} не отвечает...");
+                        allOk = false;
+                    }
+                }
+                logger.AddInfo("");
+                success = allOk;
+                if (success)
+                    logger.AddSuccess($"Обход \"{bypassMethodName}\" подходит.");
+                else
+                    logger.AddError($"Обход \"{bypassMethodName}\" не подходит.");
+            }
+            finally
+            {
+                if (!success)
+                    await zapretService.RemoveServiceAsync(ct);
+            }
+
+            return (success, bypassMethodName);
         }
     }
 }
