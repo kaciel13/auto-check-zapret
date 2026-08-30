@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 > nul
 
-if "%~1"== "" (
+if "%~1"=="" (
     echo Error: You did not specify a download link!
     pause
     exit /b
@@ -59,21 +59,11 @@ echo === ALL OPERATIONS COMPLETED SUCCESSFULLY ===
 echo Press any key to launch the application...
 pause
 
-:: === 4. LAUNCHING THE APPLICATION ===
-:: Пытаемся найти главный .exe файл на основе имени архива
-set "EXE_NAME=%FOLDERNAME%"
-:: Если в имени была точка (как в AutoCheckZapret.x64), берем часть до первой точки
-for /f "delims=." %%a in ("%FOLDERNAME%") do set "EXE_NAME=%%a"
-
-if exist "%EXE_NAME%.exe" (
-    start "" "%EXE_NAME%.exe"
-) else (
-    :: Если имя не совпало, ищем любой доступный .exe в текущей папке
-    for %%f in (*.exe) do (
-        if not "%%f"=="curl.exe" (
-            start "" "%%f"
-            goto :eof
-        )
-    )
-    echo [WARNING] Could not find any executable file to launch.
+:: === 4. LAUNCHING THE APPLICATION (SIMPLIFIED) ===
+echo.
+echo === 4. LAUNCHING THE APPLICATION ===
+for %%f in (*.exe) do (
+    start "" "%%f"
+    goto :eof
 )
+echo [WARNING] Could not find any executable file to launch.
