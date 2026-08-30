@@ -57,4 +57,10 @@
     </Resource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="LINCENSE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
