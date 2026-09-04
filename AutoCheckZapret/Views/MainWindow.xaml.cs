@@ -149,6 +149,8 @@ namespace AutoCheckZapret
                 // Передаём список в ComboBox
                 cbVersions.ItemsSource = _zapretVersionsViewModels;
                 _logger.AddSuccess($"Получено {_zapretVersionsViewModels.Count} версий.", false);
+
+                cbVersions.SelectedIndex = 0; // По умолчанию выбираем последнюю (самую новую) версию
             }
             catch (Exception ex)
             {
