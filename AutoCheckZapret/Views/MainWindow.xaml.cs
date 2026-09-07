@@ -219,8 +219,7 @@ namespace AutoCheckZapret
             string methodName = string.Empty;
             try
             {
-                (found, methodName) = await ZapretBypassTester.FindBypassMethodAsync(
-                    zapretService, _logger, _bypassCheckerCtSource.Token);
+                (found, methodName) = await ZapretBypassTester.FindBypassMethodAsync(zapretService, _logger, _bypassCheckerCtSource.Token);
             }
             catch (OperationCanceledException)
             {
@@ -253,6 +252,8 @@ namespace AutoCheckZapret
         }
 
         #endregion
+
+        #region Методы-обёртки для общей бизнес-логики приложения
 
         /// <summary>
         /// Асинхронно получает список доступных версий Zapret из репозитория,
@@ -367,5 +368,7 @@ namespace AutoCheckZapret
                     ? $"Остановить Zapret v{_selectedVersion.Number}"
                     : $"Запустить Zapret v{_selectedVersion.Number}";
         }
+
+        #endregion
     }
 }
