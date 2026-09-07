@@ -187,11 +187,7 @@ namespace AutoCheckZapret
 
                 _logger.AddInfo($"Проверка обхода \"{_selectedVersion.BypassMethodName}\"...");
 
-                (bool success, string _) = await ZapretBypassTester.TestBypassMethodAsync(
-                    zapretService,
-                    _selectedVersion.BypassMethodName,
-                    _logger,
-                    _bypassCheckerCtSource.Token);
+                (bool success, string _) = await ZapretBypassTester.TestBypassMethodAsync(zapretService, _selectedVersion.BypassMethodName, _logger, _bypassCheckerCtSource.Token);
 
                 if (success)
                 {
