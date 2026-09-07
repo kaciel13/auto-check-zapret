@@ -1,8 +1,6 @@
 ﻿using AutoCheckZapret.Helpers;
 using AutoCheckZapret.Models;
 using AutoCheckZapret.Services;
-using Newtonsoft.Json;
-using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -39,9 +37,6 @@ namespace AutoCheckZapret
 
         // Флаг, указывающий, идёт ли в данный момент процесс отмены подбора обхода
         private bool _isCancelChoosingBypassMethod;
-
-        // Имя файла для сохранения данных приложения (настройки, выбранная версия, подобранные обходы)
-        private const string SavedDataFileName = "appdata.json";
 
         /// <summary>
         /// Конструктор главного окна. Инициализирует компоненты, логгер, сервисы,
@@ -117,12 +112,9 @@ namespace AutoCheckZapret
         private void MaximizeButton_Click(object sender, RoutedEventArgs e) =>
             WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
+        private void CloseButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => SaveData();
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => SavedApplicationDataManager.SaveData(_zapretVersions, _selectedVersion);
 
         // ===== Загрузка и сохранение данных приложения =====
 
@@ -144,10 +136,23 @@ namespace AutoCheckZapret
                 foreach (var version in _zapretVersions)
                     version.IsDownloaded = _versionsService.IsZapretVersionDownloaded(version);
 
+                // Передаём список в ComboBox
                 cbVersions.ItemsSource = _zapretVersions;
                 _logger.AddSuccess($"Получено {_zapretVersions.Count} версий.", false);
 
-                cbVersions.SelectedIndex = 0; // По умолчанию выбираем последнюю (самую новую) версию
+                // Загружаем сохранённые данные
+                var (selectedVersion, downloadedVersions) = SavedApplicationDataManager.LoadSavedData(_zapretVersions);
+
+                // Применяем восстановленные данные
+                if (selectedVersion != null)
+                {
+                    _selectedVersion = selectedVersion;
+                    cbVersions.SelectedItem = selectedVersion;
+                }
+                else
+                {
+                    cbVersions.SelectedIndex = 0; // По умолчанию выбираем последнюю (самую новую) версию
+                }
             }
             catch (Exception ex)
             {
@@ -156,78 +161,7 @@ namespace AutoCheckZapret
                 return;
             }
 
-            // После успешной загрузки списка восстанавливаем сохранённое состояние
-            LoadSavedData();
             UpdateUI();
-        }
-
-        /// <summary>
-        /// Загружает данные из файла appdata.json: последнюю выбранную версию,
-        /// список скачанных версий и подобранные для них методы обхода.
-        /// </summary>
-        private void LoadSavedData()
-        {
-            if (!File.Exists(SavedDataFileName) || _zapretVersions == null)
-                return;
-
-            string json = File.ReadAllText(SavedDataFileName);
-            SavedApplicationData savedData = null;
-            try
-            {
-                savedData = JsonConvert.DeserializeObject<SavedApplicationData>(json);
-            }
-            catch (JsonSerializationException)
-            {
-                MessageBox.Show("Файл с сохранёнными настройками приложения был повреждён. Загружены настройки по умолчанию.",
-                                "Файл повреждён", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (savedData == null)
-                return;
-
-            // Восстанавливаем информацию о скачанных версиях и их методах обхода
-            foreach (var savedVersion in savedData.DownloadedZapretVersions)
-            {
-                var found = _zapretVersions.FirstOrDefault(v => v.Number == savedVersion.Number);
-                if (found != null)
-                {
-                    found.BypassMethodName = savedVersion.BypassMethodName;
-                    found.IsDownloaded = true;
-                }
-            }
-
-            // Восстанавливаем выбранную версию, если она присутствует в сохранённых данных
-            if (savedData.LastSelectedZapretVersion != null)
-            {
-                var last = _zapretVersions.FirstOrDefault(v => v.Number == savedData.LastSelectedZapretVersion.Number);
-                if (last != null)
-                {
-                    _selectedVersion = last;
-                    cbVersions.SelectedItem = last;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Сохраняет текущее состояние приложения в файл appdata.json:
-        /// выбранную версию и список скачанных версий с их методами обхода.
-        /// </summary>
-        private void SaveData()
-        {
-            if (_zapretVersions == null)
-                return;
-
-            var data = new SavedApplicationData
-            {
-                LastSelectedZapretVersion = _selectedVersion,
-                DownloadedZapretVersions = _zapretVersions
-                    .Where(v => v.IsDownloaded)
-                    .ToList()
-            };
-
-            string json = JsonConvert.SerializeObject(data, Formatting.Indented);
-            File.WriteAllText(SavedDataFileName, json);
         }
 
         // ===== Обработчики событий элементов управления =====
