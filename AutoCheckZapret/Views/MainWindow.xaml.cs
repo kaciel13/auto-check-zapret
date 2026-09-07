@@ -14,31 +14,18 @@ namespace AutoCheckZapret
     public partial class MainWindow : Window
     {
         private Logger _logger;
-
-        // Сервис для получения списка версий, скачивания и удаления
         private ZapretVersionsService _versionsService;
-
-        // Токен отмены для процесса подбора обхода (позволяет прервать операцию)
         private CancellationTokenSource _bypassCheckerCtSource;
 
-        // Список всех полученных версий Zapret
         private List<ZapretVersion> _zapretVersions;
+        private ZapretVersion? _selectedVersion;
 
-        // Текущая выбранная пользователем версия
-        private ZapretVersion _selectedVersion;
-
-        // Флаг, указывающий, запущен ли в данный момент Zapret как служба
         private bool _isZapretRunning;
-
-        // Флаг, указывающий, идёт ли в данный момент процесс подбора обхода
         private bool _isChoosingBypassMethod;
-
-        // Флаг, указывающий, идёт ли в данный момент процесс отмены подбора обхода
-        private bool _isCancelChoosingBypassMethod;
+        private bool _isCancellingChoosingBypassMethod;
 
         /// <summary>
-        /// Конструктор главного окна. Инициализирует компоненты, логгер, сервисы,
-        /// устанавливает заголовок окна и запускает асинхронную загрузку версий.
+        /// Конструктор главного окна приложения
         /// </summary>
         public MainWindow()
         {
@@ -49,84 +36,39 @@ namespace AutoCheckZapret
             // Привязываем документ логгера к элементу FlowDocumentScrollViewer
             fdsViewerConsole.Document = _logger.LogDocument;
 
-            // Инициализация сервисов
+            // Инициализируем сервисы и даём полям значения по умолчанию
             _versionsService = new ZapretVersionsService();
 
             _bypassCheckerCtSource = new CancellationTokenSource();
 
-            // Определяем версию приложения из сборки и отображаем в заголовке
+            _zapretVersions = new List<ZapretVersion>();
+            _selectedVersion = null;
+
+            // Определяем версию приложения из сборки и отображаем в хэдере приложения
             Assembly assembly = Assembly.GetExecutingAssembly();
             Version version = assembly.GetName().Version!;
             lbTitle.Content = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
 
-            // Проверяем наличие обновлений (асинхронно, но не блокируем)
+            // Проверяем наличие обновлений
             ApplicationUpdater.CheckForUpdatesAsync();
 
             // Запускаем асинхронную загрузку списка доступных версий Zapret
-            _ = FetchAvailableVersions();
+            _ = FetchAvailableZapretVersionsVersions();
             UpdateUI();
         }
 
-        // ===== Обработчики кнопок управления окном =====
+        #region Обработчики кнопок управления окном
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
-        private void MaximizeButton_Click(object sender, RoutedEventArgs e) =>
-            WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => SavedApplicationDataManager.SaveData(_zapretVersions, _selectedVersion);
 
-        // ===== Загрузка и сохранение данных приложения =====
+        #endregion
 
-        /// <summary>
-        /// Асинхронно получает список доступных версий Zapret из репозитория,
-        /// обновляет UI и загружает сохранённые пользовательские данные.
-        /// </summary>
-        private async Task FetchAvailableVersions()
-        {
-            _logger.AddInfo("Получение версий Zapret...");
-            try
-            {
-                var models = await _versionsService.FetchAvailableVersions();
-
-                // Используем модели напрямую
-                _zapretVersions = models.ToList();
-
-                // Проверяем, какие версии уже скачаны
-                foreach (var version in _zapretVersions)
-                    version.IsDownloaded = _versionsService.IsZapretVersionDownloaded(version);
-
-                // Передаём список в ComboBox
-                cbVersions.ItemsSource = _zapretVersions;
-                _logger.AddSuccess($"Получено {_zapretVersions.Count} версий.", false);
-
-                // Загружаем сохранённые данные
-                var (selectedVersion, downloadedVersions) = SavedApplicationDataManager.LoadSavedData(_zapretVersions);
-
-                // Применяем восстановленные данные
-                if (selectedVersion != null)
-                {
-                    _selectedVersion = selectedVersion;
-                    cbVersions.SelectedItem = selectedVersion;
-                }
-                else
-                {
-                    cbVersions.SelectedIndex = 0; // По умолчанию выбираем последнюю (самую новую) версию
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.AddError($"Ошибка получения версий: {ex.Message}");
-                UpdateUI();
-                return;
-            }
-
-            UpdateUI();
-        }
-
-        // ===== Обработчики событий элементов управления =====
+        #region Обработчики событий элементов управления
 
         /// <summary>
         /// Вызывается при изменении выбранного элемента в ComboBox с версиями.
@@ -217,7 +159,7 @@ namespace AutoCheckZapret
             if (_isChoosingBypassMethod)
             {
                 _logger.AddInfo("Отмена процесса подбора...");
-                _isCancelChoosingBypassMethod = true;
+                _isCancellingChoosingBypassMethod = true;
                 UpdateUI();
                 _bypassCheckerCtSource?.Cancel();
                 return;
@@ -286,7 +228,7 @@ namespace AutoCheckZapret
                 _bypassCheckerCtSource = new CancellationTokenSource(); // сброс токена
                 _logger.AddInfo("Процесс подбора обхода отменён.");
                 _isChoosingBypassMethod = false;
-                _isCancelChoosingBypassMethod = false;
+                _isCancellingChoosingBypassMethod = false;
                 UpdateUI();
                 return;
             }
@@ -310,13 +252,66 @@ namespace AutoCheckZapret
             UpdateUI();
         }
 
+        #endregion
+
+        /// <summary>
+        /// Асинхронно получает список доступных версий Zapret из репозитория,
+        /// обновляет UI и загружает сохранённые пользовательские данные.
+        /// </summary>
+        private async Task FetchAvailableZapretVersionsVersions()
+        {
+            _logger.AddInfo("Получение версий Zapret...");
+            try
+            {
+                _zapretVersions = await _versionsService.FetchAvailableVersions();
+
+                // Проверяем, какие версии уже скачаны
+                foreach (var version in _zapretVersions)
+                    version.IsDownloaded = _versionsService.IsZapretVersionDownloaded(version);
+
+                // Передаём список в ComboBox
+                cbVersions.ItemsSource = _zapretVersions;
+                _logger.AddSuccess($"Получено {_zapretVersions.Count} версий.", false);
+
+                LoadSavedData();
+            }
+            catch (Exception ex)
+            {
+                _logger.AddError($"Ошибка получения версий: {ex.Message}");
+                UpdateUI();
+                return;
+            }
+
+            UpdateUI();
+        }
+
+        /// <summary>
+        /// Загружает сохранённые данные приложения из файла
+        /// </summary>
+        private void LoadSavedData()
+        {
+            // Загружаем сохранённые данные
+            var (selectedVersion, downloadedVersions) = SavedApplicationDataManager.LoadSavedData(_zapretVersions);
+
+            // Применяем восстановленные данные
+            if (selectedVersion != null)
+            {
+                _selectedVersion = selectedVersion;
+                cbVersions.SelectedItem = selectedVersion;
+            }
+            else
+            {
+                cbVersions.SelectedIndex = 0; // По умолчанию выбираем последнюю (самую новую) версию
+            }
+        }
+
         /// <summary>
         /// Обновляет отображение ComboBox без изменения выбранного элемента
         /// </summary>
         private void RefreshComboBox()
         {
             // Сохраняем текущий выбранный элемент
-            var selected = _selectedVersion;
+            ZapretVersion? selected = _selectedVersion;
 
             // Обновляем ItemsSource
             cbVersions.ItemsSource = null;
@@ -343,7 +338,7 @@ namespace AutoCheckZapret
             btnDelete.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
 
             // Кнопка StartStop активна, если выбрана версия и она скачана (подбор или запуск/остановка)
-            btnStartStop.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded && !_isCancelChoosingBypassMethod;
+            btnStartStop.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded && !_isCancellingChoosingBypassMethod;
 
             // Определяем текст на кнопке в зависимости от состояния
             if (_selectedVersion == null)

@@ -70,7 +70,7 @@ namespace AutoCheckZapret.Helpers
         /// </summary>
         /// <param name="zapretVersions">Список всех версий Zapret</param>
         /// <param name="selectedVersion">Выбранная пользователем версия</param>
-        public static void SaveData(List<ZapretVersion> zapretVersions, ZapretVersion selectedVersion)
+        public static void SaveData(List<ZapretVersion> zapretVersions, ZapretVersion? selectedVersion)
         {
             if (zapretVersions == null)
                 return;

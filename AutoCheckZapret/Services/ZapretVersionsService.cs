@@ -32,9 +32,9 @@ namespace AutoCheckZapret.Services
         /// Получение информации о всех доступных версиях Zapret
         /// </summary>
         /// <returns>Список доступных версий в виде ZapretVersion</returns>
-        public async Task<ObservableCollection<ZapretVersion>> FetchAvailableVersions()
+        public async Task<List<ZapretVersion>> FetchAvailableVersions()
         {
-            ObservableCollection<ZapretVersion> versions = new ObservableCollection<ZapretVersion>();
+            List<ZapretVersion> versions = new List<ZapretVersion>();
             string url = $"{BaseUrl}/tags";
 
             // Проходимся по всем страницам с версиями Zapret
