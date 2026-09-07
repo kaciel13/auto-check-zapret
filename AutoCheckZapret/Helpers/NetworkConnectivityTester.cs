@@ -46,29 +46,22 @@ namespace AutoCheckZapret.Helpers
 
                 request.Headers.Pragma.ParseAdd("no-cache");
 
-                using var cts = new CancellationTokenSource(
-                    TimeSpan.FromSeconds(timeoutSeconds));
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
 
                 Debug.WriteLine($"Тест: {url}");
 
-                using var response = await client.SendAsync(
-                    request,
-                    HttpCompletionOption.ResponseHeadersRead,
-                    cts.Token);
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
 
-                Debug.WriteLine(
-                    $"{url} Ответ: {(int)response.StatusCode} {response.StatusCode}");
+                Debug.WriteLine($"{url} Ответ: {(int)response.StatusCode} {response.StatusCode}");
 
                 foreach (var header in response.Headers)
                 {
-                    Debug.WriteLine(
-                        $"{header.Key}: {string.Join(", ", header.Value)}");
+                    Debug.WriteLine($"{header.Key}: {string.Join(", ", header.Value)}");
                 }
 
                 foreach (var header in response.Content.Headers)
                 {
-                    Debug.WriteLine(
-                        $"{header.Key}: {string.Join(", ", header.Value)}");
+                    Debug.WriteLine($"{header.Key}: {string.Join(", ", header.Value)}");
                 }
 
                 // Любой ответ сервера считается валидным

@@ -25,11 +25,7 @@ namespace AutoCheckZapret.Helpers
                 string fileName = Path.GetFileName(fullPath);
                 logger.AddInfo($"Тест обхода \"{fileName}\" ({i + 1}/{bypassFiles.Count})...");
 
-                (bool success, string _) = await TestBypassMethodAsync(
-                    zapretService,
-                    fileName, 
-                    logger,
-                    ct);
+                (bool success, string _) = await TestBypassMethodAsync(zapretService, fileName, logger, ct);
 
                 if (success)
                     return (true, fileName);

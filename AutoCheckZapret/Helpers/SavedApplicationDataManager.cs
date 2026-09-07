@@ -86,19 +86,5 @@ namespace AutoCheckZapret.Helpers
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
             File.WriteAllText(SavedDataFileName, json);
         }
-
-        /// <summary>
-        /// Проверяет, существует ли файл с сохранёнными данными
-        /// </summary>
-        public static bool IsSavedDataExists() => File.Exists(SavedDataFileName);
-
-        /// <summary>
-        /// Удаляет файл с сохранёнными данными
-        /// </summary>
-        public static void DeleteSavedData()
-        {
-            if (File.Exists(SavedDataFileName))
-                File.Delete(SavedDataFileName);
-        }
     }
 }
