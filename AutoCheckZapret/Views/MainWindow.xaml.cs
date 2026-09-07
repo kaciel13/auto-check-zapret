@@ -13,7 +13,6 @@ namespace AutoCheckZapret
     /// </summary>
     public partial class MainWindow : Window
     {
-        // Логгер для вывода сообщений в консоль приложения
         private Logger _logger;
 
         // Сервис для получения списка версий, скачивания и удаления

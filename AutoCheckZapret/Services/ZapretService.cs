@@ -2,7 +2,7 @@
 using System.IO;
 using System.ServiceProcess;
 
-namespace AutoCheckZapret
+namespace AutoCheckZapret.Services
 {
     /// <summary>
     /// Сервис для установки, запуска и удаления службы Zapret.
