@@ -62,8 +62,7 @@ namespace AutoCheckZapret
             Version version = assembly.GetName().Version!;
             lbTitle.Content = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
 
-            // Проверяем наличие обновлений (асинхронно, но не блокируем)
-            Updater.CheckUpdate();
+            ApplicationUpdater.CheckForUpdatesAsync();
 
             // Запускаем асинхронную загрузку списка доступных версий Zapret
             _ = FetchAvailableVersions();
