@@ -1,18 +1,17 @@
-﻿using AutoCheckZapret.Helpers;
-using System.IO;
+﻿using System.IO;
 
-namespace AutoCheckZapret.Services
+namespace AutoCheckZapret.Helpers
 {
-    public static class BypassCheckerService
+    /// <summary>
+    /// Класс-помощник для работы с обходами выбранной версии Zapret
+    /// </summary>
+    public static class ZapretBypassTester
     {
         /// <summary>
         /// Найти подходящий обход из списка обходов в версии Zapret.
-        /// Использует <see cref="TestSingleBypassAsync"/> для проверки каждого файла.
+        /// Использует <see cref="TestBypassMethodAsync"/> для проверки каждого файла.
         /// </summary>
-        public static async Task<(bool Success, string BypassName)> FindBypassMethodAsync(
-            ZapretService zapretService,
-            Logger logger,
-            CancellationToken ct)
+        public static async Task<(bool Success, string BypassName)> FindBypassMethodAsync(ZapretService zapretService, Logger logger, CancellationToken ct)
         {
             List<string> bypassFiles = zapretService.GetBypassFilesFromFolder();
             await zapretService.RemoveServiceAsync(ct);
@@ -25,7 +24,7 @@ namespace AutoCheckZapret.Services
                 string fileName = Path.GetFileName(fullPath);
                 logger.AddInfo($"Тест обхода \"{fileName}\" ({i + 1}/{bypassFiles.Count})...");
 
-                (bool success, string _) = await TestSingleBypassAsync(
+                (bool success, string _) = await TestBypassMethodAsync(
                     zapretService,
                     fileName, 
                     logger,
@@ -48,11 +47,7 @@ namespace AutoCheckZapret.Services
         /// <param name="bypassMethodName">Имя .bat-файла обхода (без пути)</param>
         /// <param name="logger">Логгер</param>
         /// <param name="ct">Токен отмены</param>
-        public static async Task<(bool Success, string BypassName)> TestSingleBypassAsync(
-            ZapretService zapretService,
-            string bypassMethodName,
-            Logger logger,
-            CancellationToken ct = default)
+        public static async Task<(bool Success, string BypassName)> TestBypassMethodAsync(ZapretService zapretService, string bypassMethodName, Logger logger, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(bypassMethodName))
             {
@@ -90,7 +85,7 @@ namespace AutoCheckZapret.Services
                 };
 
                 logger.AddInfo("   Проверка доступности сервисов...");
-                var tasks = urlsToCheck.Select(url => UrlChecker.IsUrlRespondingAsync(url, 10)).ToArray();
+                var tasks = urlsToCheck.Select(url => NetworkConnectivityTester.IsUrlRespondingAsync(url, 10)).ToArray();
                 bool[] results = await Task.WhenAll(tasks);
 
                 bool allOk = true;

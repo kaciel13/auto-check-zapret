@@ -5,7 +5,10 @@ using System.Net.Http.Headers;
 
 namespace AutoCheckZapret.Helpers
 {
-    public static class UrlChecker
+    /// <summary>
+    /// Класс-помощник для проверки доступности сетевых ресурсов
+    /// </summary>
+    public static class NetworkConnectivityTester
     {
         private static readonly SocketsHttpHandler handler = new()
         {
@@ -19,15 +22,11 @@ namespace AutoCheckZapret.Helpers
 
         private static readonly HttpClient client = new(handler);
 
-        public static async Task<bool> IsUrlRespondingAsync(
-            string url,
-            int timeoutSeconds = 10)
+        public static async Task<bool> IsUrlRespondingAsync(string url, int timeoutSeconds = 10)
         {
             try
             {
-                using var request = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    url)
+                using var request = new HttpRequestMessage(HttpMethod.Get, url)
                 {
                     // Принудительно используем HTTP/1.1
                     Version = HttpVersion.Version11,

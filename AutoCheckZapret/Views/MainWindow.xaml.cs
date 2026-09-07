@@ -4,7 +4,6 @@ using AutoCheckZapret.Services;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace AutoCheckZapret
 {
@@ -46,9 +45,8 @@ namespace AutoCheckZapret
         {
             InitializeComponent();
 
-            // Создаём экземпляр логгера и подписываемся на событие добавления сообщения
-            _logger = new Logger();
-            _logger.MessageAdded += OnMessageAdded;
+            // Создаём экземпляр логгера и передаём ему FlowDocumentScrollViewer
+            _logger = new Logger(fdsViewerConsole);
             // Привязываем документ логгера к элементу FlowDocumentScrollViewer
             fdsViewerConsole.Document = _logger.LogDocument;
 
@@ -62,46 +60,12 @@ namespace AutoCheckZapret
             Version version = assembly.GetName().Version!;
             lbTitle.Content = $"Auto Check Zapret v{version.Major}.{version.Minor}.{version.Build}";
 
+            // Проверяем наличие обновлений (асинхронно, но не блокируем)
             ApplicationUpdater.CheckForUpdatesAsync();
 
             // Запускаем асинхронную загрузку списка доступных версий Zapret
             _ = FetchAvailableVersions();
             UpdateUI();
-        }
-
-        /// <summary>
-        /// Обработчик события добавления нового сообщения в лог.
-        /// Выполняет прокрутку окна консоли к последнему сообщению.
-        /// </summary>
-        private void OnMessageAdded(object sender, EventArgs e)
-        {
-            // Используем Dispatcher для выполнения прокрутки после обновления UI
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                // Ищем ScrollViewer внутри FlowDocumentScrollViewer и прокручиваем вниз
-                var scrollViewer = FindVisualChild<ScrollViewer>(fdsViewerConsole);
-                scrollViewer?.ScrollToEnd();
-            }), System.Windows.Threading.DispatcherPriority.Background);
-        }
-
-        /// <summary>
-        /// Рекурсивный поиск дочернего элемента указанного типа в визуальном дереве.
-        /// </summary>
-        /// <typeparam name="T">Тип искомого элемента (например, ScrollViewer)</typeparam>
-        /// <param name="parent">Родительский DependencyObject, с которого начинается поиск</param>
-        /// <returns>Найденный элемент или null, если элемент не найден</returns>
-        private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T result)
-                    return result;
-                var subResult = FindVisualChild<T>(child);
-                if (subResult != null)
-                    return subResult;
-            }
-            return null;
         }
 
         // ===== Обработчики кнопок управления окном =====
@@ -282,7 +246,7 @@ namespace AutoCheckZapret
 
                 _logger.AddInfo($"Проверка обхода \"{_selectedVersion.BypassMethodName}\"...");
 
-                (bool success, string _) = await BypassCheckerService.TestSingleBypassAsync(
+                (bool success, string _) = await ZapretBypassTester.TestBypassMethodAsync(
                     zapretService,
                     _selectedVersion.BypassMethodName,
                     _logger,
@@ -314,7 +278,7 @@ namespace AutoCheckZapret
             string methodName = string.Empty;
             try
             {
-                (found, methodName) = await BypassCheckerService.FindBypassMethodAsync(
+                (found, methodName) = await ZapretBypassTester.FindBypassMethodAsync(
                     zapretService, _logger, _bypassCheckerCtSource.Token);
             }
             catch (OperationCanceledException)

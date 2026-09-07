@@ -9,11 +9,11 @@
         /// <summary>
         /// Последняя выбранная версия Zapret в программе
         /// </summary>
-        public ZapretVersion LastSelectedZapretVersion { get; set; }
+        public ZapretVersion? LastSelectedZapretVersion { get; set; } = null;
 
         /// <summary>
         /// Скачанные версии Zapret (в них также будут данные о подобранных для них обходах)
         /// </summary>
-        public List<ZapretVersion> DownloadedZapretVersions { get; set; }
+        public List<ZapretVersion> DownloadedZapretVersions { get; set; } = new List<ZapretVersion>();
     }
 }

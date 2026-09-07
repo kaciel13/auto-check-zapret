@@ -19,21 +19,20 @@ namespace AutoCheckZapret.Helpers
         /// </summary>
         /// <param name="zapretVersions">Список всех доступных версий Zapret</param>
         /// <returns>Кортеж: (SelectedVersion, DownloadedVersions)</returns>
-        public static (ZapretVersion selectedVersion, List<ZapretVersion> downloadedVersions) LoadSavedData(List<ZapretVersion> zapretVersions)
+        public static (ZapretVersion? selectedVersion, List<ZapretVersion>? downloadedVersions) LoadSavedData(List<ZapretVersion> zapretVersions)
         {
             if (!File.Exists(SavedDataFileName) || zapretVersions == null)
                 return (null, null);
 
             string json = File.ReadAllText(SavedDataFileName);
-            SavedApplicationData savedData = null;
+            SavedApplicationData? savedData = null;
             try
             {
                 savedData = JsonConvert.DeserializeObject<SavedApplicationData>(json);
             }
             catch (JsonSerializationException)
             {
-                MessageBox.Show("Файл с сохранёнными настройками приложения был повреждён. Загружены настройки по умолчанию.",
-                                "Файл повреждён", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Файл с сохранёнными настройками приложения был повреждён. Загружены настройки по умолчанию.", "Файл повреждён", MessageBoxButton.OK, MessageBoxImage.Error);
                 return (null, null);
             }
 
@@ -56,7 +55,7 @@ namespace AutoCheckZapret.Helpers
             }
 
             // Восстанавливаем выбранную версию, если она присутствует в сохранённых данных
-            ZapretVersion selectedVersion = null;
+            ZapretVersion? selectedVersion = null;
             if (savedData.LastSelectedZapretVersion != null)
             {
                 selectedVersion = zapretVersions.FirstOrDefault(v => v.Number == savedData.LastSelectedZapretVersion.Number);

@@ -8,7 +8,7 @@ using System.Windows;
 namespace AutoCheckZapret.Helpers
 {
     /// <summary>
-    /// Статический класс для проверки и установки обновлений приложения
+    /// Статический класс для проверки версии приложения и установки новейшей версии из GitHub-репозитория
     /// </summary>
     public static class ApplicationUpdater
     {
@@ -41,8 +41,7 @@ namespace AutoCheckZapret.Helpers
 
                     if (IsNewVersionAvailable(currentVersion, latestVersion))
                     {
-                        if (MessageBox.Show($"Вышло новое обновление.\n{currentVersion} => {latestVersion}\nОбновить?",
-                        "Обновление", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                        if (MessageBox.Show($"Вышло новое обновление.\n{currentVersion} => {latestVersion}\nОбновить?", "Обновление", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                         {
                             await DownloadAndInstallUpdateAsync(latestVersion);
                         }
@@ -100,7 +99,7 @@ namespace AutoCheckZapret.Helpers
             {
                 string downloadUrl = $"https://github.com/kaciel13/auto-check-zapret/releases/download/{version}/ACZ.zip";
                 string appDir = AppDomain.CurrentDomain.BaseDirectory;
-                string updateScriptPath = Path.Combine(appDir, "Helpers", "update.bat");
+                string updateScriptPath = Path.Combine(appDir, "update.bat");
 
                 if (!File.Exists(updateScriptPath))
                 {
