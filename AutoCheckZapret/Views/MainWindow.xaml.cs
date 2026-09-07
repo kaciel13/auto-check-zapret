@@ -22,7 +22,7 @@ namespace AutoCheckZapret
 
         private bool _isZapretRunning;
         private bool _isChoosingBypassMethod;
-        private bool _isCancellingChoosingBypassMethod;
+        private bool _isCancellingBypassMethodSelection;
 
         /// <summary>
         /// Конструктор главного окна приложения
@@ -159,7 +159,7 @@ namespace AutoCheckZapret
             if (_isChoosingBypassMethod)
             {
                 _logger.AddInfo("Отмена процесса подбора...");
-                _isCancellingChoosingBypassMethod = true;
+                _isCancellingBypassMethodSelection = true;
                 UpdateUI();
                 _bypassCheckerCtSource?.Cancel();
                 return;
@@ -227,7 +227,7 @@ namespace AutoCheckZapret
                 _bypassCheckerCtSource = new CancellationTokenSource(); // сброс токена
                 _logger.AddInfo("Процесс подбора обхода отменён.");
                 _isChoosingBypassMethod = false;
-                _isCancellingChoosingBypassMethod = false;
+                _isCancellingBypassMethodSelection = false;
                 UpdateUI();
                 return;
             }
@@ -339,7 +339,7 @@ namespace AutoCheckZapret
             btnDelete.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
 
             // Кнопка StartStop активна, если выбрана версия и она скачана (подбор или запуск/остановка)
-            btnStartStop.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded && !_isCancellingChoosingBypassMethod;
+            btnStartStop.IsEnabled = _selectedVersion != null && _selectedVersion.IsDownloaded && !_isCancellingBypassMethodSelection;
 
             // Определяем текст на кнопке в зависимости от состояния
             if (_selectedVersion == null)
