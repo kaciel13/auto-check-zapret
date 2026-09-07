@@ -1,5 +1,4 @@
-﻿using AutoCheckZapret;
-namespace AutoCheckZapret.Models
+﻿namespace AutoCheckZapret.Models
 {
     /// <summary>
     /// Данные приложения (настройки, выбранные версии Zapret) и другое, которые
