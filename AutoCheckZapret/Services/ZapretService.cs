@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using AutoCheckZapret.Helpers;
+using System.Diagnostics;
 using System.IO;
 using System.ServiceProcess;
 
@@ -44,12 +45,9 @@ namespace AutoCheckZapret.Services
         }
 
         /// <summary>
-        /// Возвращает список BAT-файлов,
-        /// содержащих команды запуска Zapret.
+        /// Возвращает список BAT-файлов, содержащих команды запуска Zapret, отсортированный логической сортировкой Windows
         /// </summary>
-        /// <returns>
-        /// Список путей к найденным файлам стратегий.
-        /// </returns>
+        /// <returns>Список путей к найденным файлам стратегий</returns>
         public List<string> GetBypassFilesFromFolder()
         {
             string[] files = Directory.GetFiles(_folderPath);
@@ -70,6 +68,14 @@ namespace AutoCheckZapret.Services
                     bypassFiles.Add(Path.GetFileName(file));
                 }
             }
+
+            /*
+             * Сортируем методы "логической сортировкой" из Windows API
+             * Детали в применённом здесь классе.
+             * 
+             * В таком же порядке с методами обхода работает и оригинальный zapret-discord-youtube
+            */
+            bypassFiles.Sort(new WindowsExplorerStringComparer());
 
             return bypassFiles;
         }
