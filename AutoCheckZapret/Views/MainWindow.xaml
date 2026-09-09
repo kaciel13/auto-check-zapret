@@ -300,6 +300,7 @@
                           MinWidth="44"
                           Style="{StaticResource CustomComboBoxStyle}"
                           FontSize="16"
+                          IsEnabled="False"
                           SelectionChanged="VersionsComboBox_SelectionChanged">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>

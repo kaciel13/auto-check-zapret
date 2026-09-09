@@ -54,6 +54,9 @@ namespace AutoCheckZapret
 
             // Запускаем асинхронную загрузку списка доступных версий Zapret
             _ = FetchAvailableZapretVersionsVersions();
+
+            _isZapretRunning = new ZapretService().IsZapretRunning();
+
             UpdateUI();
         }
 
@@ -326,7 +329,7 @@ namespace AutoCheckZapret
         private void UpdateUI()
         {
             // ComboBox доступен, если есть версии или не идёт подбор и Zapret не запущен
-            cbVersions.IsEnabled = _zapretVersions != null && !_isChoosingBypassMethod && !_isZapretRunning;
+            cbVersions.IsEnabled = _zapretVersions.Count != 0 && !_isChoosingBypassMethod && !_isZapretRunning;
 
             // Кнопка скачивания доступна, если выбрана версия, она не скачана, и нет активных процессов
             btnDownload.IsEnabled = _selectedVersion != null && !_selectedVersion.IsDownloaded && !_isChoosingBypassMethod && !_isZapretRunning;
