@@ -34,7 +34,7 @@
 
   <ItemGroup>
     <Content Include="appIcon.ico" />
-    <Content Include="Helpers\update.bat">
+    <Content Include="update.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

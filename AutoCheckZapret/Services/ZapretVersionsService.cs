@@ -32,9 +32,9 @@ namespace AutoCheckZapret.Services
         /// Получение информации о всех доступных версиях Zapret
         /// </summary>
         /// <returns>Список доступных версий в виде ZapretVersion</returns>
-        public async Task<ObservableCollection<ZapretVersion>> FetchAvailableVersions()
+        public async Task<List<ZapretVersion>> FetchAvailableVersions()
         {
-            ObservableCollection<ZapretVersion> versions = new ObservableCollection<ZapretVersion>();
+            List<ZapretVersion> versions = new List<ZapretVersion>();
             string url = $"{BaseUrl}/tags";
 
             // Проходимся по всем страницам с версиями Zapret
@@ -128,10 +128,12 @@ namespace AutoCheckZapret.Services
             // Переименовываем папку с версией из zapret-discord-youtube-V в просто V, то есть номер версии, например 1.0.2
             Directory.Move(oldFolderPath, newFolderPath);
 
-            // Пользователь может скачать не самую новую версию Zapret
-            // В таком случае при запуске любого обхода Zapret будет проверять себя на наличие обновлений
-            // И будет открываться страница в браузере с новейшей версией, чего нам не надо
-            // Поэтому обрубаем Zapret возможность провериться на обновления
+            /* 
+             * Пользователь может скачать не самую новую версию Zapret
+             * В таком случае при запуске любого обхода Zapret будет проверять себя на наличие обновлений
+             * И будет открываться страница в браузере с новейшей версией, чего нам не надо
+             * Поэтому обрубаем Zapret возможность провериться на обновления
+            */
             string servicePath = Path.Combine(DownloadPath, $"{version.Number}", "service.bat");
             Debug.WriteLine($"Путь к service.bat: {servicePath}");  
 
@@ -145,7 +147,7 @@ namespace AutoCheckZapret.Services
                 // Если тут ловим, что файл не найден, то говорим, что версия успешно скачана и всё
                 // Старые версии Zapret не имеют единого service.bat
                 allLines = File.ReadAllLines(servicePath).ToList();
-                Debug.WriteLine($"service.bat найден, начинаем модификацию");  
+                Debug.WriteLine($"service.bat найден, начинаем модификацию");
             }
             catch (FileNotFoundException)
             {
