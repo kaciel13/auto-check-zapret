@@ -323,8 +323,7 @@ namespace AutoCheckZapret
         }
 
         /// <summary>
-        /// Обновляет состояние всех элементов управления в зависимости от текущего состояния:
-        /// доступность ComboBox, кнопок Download, Delete, StartStop и их текстовое содержимое.
+        /// Обновляет состояние всех элементов управления в зависимости от текущего состояния приложения
         /// </summary>
         private void UpdateUI()
         {
@@ -344,28 +343,26 @@ namespace AutoCheckZapret
             if (_selectedVersion == null)
             {
                 btnStartStop.Content = "Не выбрана версия Zapret";
-                return;
             }
-
-            if (_isChoosingBypassMethod)
+            else if (_isChoosingBypassMethod)
             {
                 btnStartStop.Content = "Остановить подбор обхода";
-                return;
             }
-
-            if (!_selectedVersion.IsDownloaded)
+            else if (!_selectedVersion.IsDownloaded)
             {
                 btnStartStop.Content = $"Скачайте Zapret v{_selectedVersion.Number}, чтобы начать работу";
                 btnStartStop.IsEnabled = false;
-                return;
             }
-
-            if (string.IsNullOrWhiteSpace(_selectedVersion.BypassMethodName))
+            else if (string.IsNullOrWhiteSpace(_selectedVersion.BypassMethodName))
+            {
                 btnStartStop.Content = $"Подобрать обход для Zapret v{_selectedVersion.Number}";
+            }
             else
+            {
                 btnStartStop.Content = _isZapretRunning
                     ? $"Остановить Zapret v{_selectedVersion.Number}"
                     : $"Запустить Zapret v{_selectedVersion.Number}";
+            }
         }
 
         #endregion
