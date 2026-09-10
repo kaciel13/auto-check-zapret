@@ -1,6 +1,7 @@
 ﻿using AutoCheckZapret.Helpers;
 using AutoCheckZapret.Models;
 using AutoCheckZapret.Services;
+using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -159,6 +160,8 @@ namespace AutoCheckZapret
         {
             if (_selectedVersion == null) return;
 
+            btnStartStop.IsEnabled = false;
+
             if (_isChoosingBypassMethod)
             {
                 _logger.AddInfo("Отмена процесса подбора...");
@@ -169,13 +172,32 @@ namespace AutoCheckZapret
             }
 
             string versionPath = AppDomain.CurrentDomain.BaseDirectory + $"versions\\{_selectedVersion.Number}";
-            var zapretService = new ZapretService(versionPath);
+
+            // По умолчанию создаётся пустой ZapretService, пригодный только для остановки запущенной службы Zapret
+            ZapretService zapretService = new ZapretService();
+            bool isEmptyZapretService = true;
+            if (Directory.Exists(versionPath))
+            {
+                // Если выясняется, что версия Zapret, с которой производится работа в программе, скачана,
+                // то создаётся полноценный сервис для работы с этой версией Zapret
+                zapretService = new ZapretService(versionPath);
+                isEmptyZapretService = false;
+            }
 
             // 1. Если служба уже запущена – останавливаем
             if (_isZapretRunning)
             {
                 await zapretService.RemoveServiceAsync();
-                _logger.AddInfo($"Zapret v{_selectedVersion.Number} остановлен.");
+
+                if (isEmptyZapretService)
+                {
+                    _logger.AddInfo($"\nZapret остановлен.");
+                }
+                else
+                {
+                    _logger.AddInfo($"\nZapret v{_selectedVersion.Number} остановлен.");
+                }
+
                 _isZapretRunning = false;
                 UpdateUI();
                 return;
@@ -281,8 +303,6 @@ namespace AutoCheckZapret
                 UpdateUI();
                 return;
             }
-
-            UpdateUI();
         }
 
         /// <summary>
@@ -352,6 +372,19 @@ namespace AutoCheckZapret
             {
                 btnStartStop.Content = $"Скачайте Zapret v{_selectedVersion.Number}, чтобы начать работу";
                 btnStartStop.IsEnabled = false;
+
+                /*
+                 * Может быть ситуация, когда Zapret был запущен из другой версии программы или вообще вручную.
+                 * В таком случае пользователю нужно давать возможность выключить запущенную службу Zapret
+                 * (из какой бы версии Zapret она ни была) и продолжить работу с приложением ACZ
+                 */
+                if (_isZapretRunning)
+                {
+                    _logger.AddError("\nОбнаружен Zapret, запущенный из другой версии приложения или вручную. Для продолжения работы с приложением необходимо остановить Zapret.");
+
+                    btnStartStop.Content = "Остановить Zapret";
+                    btnStartStop.IsEnabled = true;
+                }
             }
             else if (string.IsNullOrWhiteSpace(_selectedVersion.BypassMethodName))
             {
