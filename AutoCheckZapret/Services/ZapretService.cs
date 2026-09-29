@@ -24,8 +24,22 @@ namespace AutoCheckZapret.Services
         private readonly string _description = "Zapret DPI bypass software";
 
         /// <summary>
-        /// Инициализирует сервис управления Zapret.
+        /// Инициализирует пустую основу сервиса для работы с Zapret.
+        /// Этот конструктор используется для проверки запущенности сервиса Zapret на компьютере пользователя
+        /// в самом начале работы программы.
+        /// 
+        /// Попытка использовать сервис, созданный с помощью этого конструктора, для других функций
+        /// приведёт к непредвиденным ошибкам и исключениям в работе программы
         /// </summary>
+        public ZapretService()
+        {
+            _folderPath = string.Empty;
+            _listsPath = string.Empty;
+            _winsPath = string.Empty;
+            _binPath = string.Empty;
+        }
+
+        /// <summary>Инициализирует полноценный сервис управления Zapret.</summary>
         /// <param name="folderPath">Путь к основной папке Zapret</param>
         public ZapretService(string folderPath)
         {
@@ -44,9 +58,7 @@ namespace AutoCheckZapret.Services
             }
         }
 
-        /// <summary>
-        /// Возвращает список BAT-файлов, содержащих команды запуска Zapret, отсортированный логической сортировкой Windows
-        /// </summary>
+        /// <summary>Возвращает список BAT-файлов, содержащих команды запуска Zapret, отсортированный логической сортировкой Windows</summary>
         /// <returns>Список путей к найденным файлам стратегий</returns>
         public List<string> GetBypassFilesFromFolder()
         {
@@ -80,282 +92,11 @@ namespace AutoCheckZapret.Services
             return bypassFiles;
         }
 
-        /// <summary>
-        /// Извлекает аргументы запуска из файла стратегии.
-        /// </summary>
-        /// <param name="filePath">
-        /// Путь к BAT-файлу со стратегией.
-        /// </param>
-        /// <returns>
-        /// Строка с аргументами запуска.
-        /// Если аргументы не найдены, возвращается сообщение
-        /// «Аргументы не найдены».
-        /// </returns>
-        private string GetBypassArg(string filePath)
-        {
-            string content = File.ReadAllText(filePath);
-
-            int index = content.IndexOf("--", StringComparison.Ordinal);
-
-            if (index == -1)
-            {
-                return "Аргументы не найдены";
-            }
-
-            string rawArg = content[index..];
-            rawArg = rawArg.Replace("--hostlist=\"%LISTS%list-general-user.txt\"", "")
-                           .Replace("--hostlist-exclude=\"%LISTS%list-exclude-user.txt\"", "")
-                           .Replace("--ipset-exclude=\"%LISTS%ipset-exclude-user.txt\"", "");
-            rawArg = rawArg.Replace("^!", "!").Replace("^", " ").Replace("\r", " ").Replace("\n", " ");
-
-            string listsPath = string.IsNullOrEmpty(_listsPath) ? "" : _listsPath.TrimEnd('\\') + "\\";
-            string binPath = string.IsNullOrEmpty(_binPath) ? "" : _binPath.TrimEnd('\\') + "\\";
-
-            // В BAT-файлах знак "=" используется
-            // как разделитель параметра и значения.
-
-            // Экранирование кавычек для передачи
-            // аргументов внешней утилите.
-
-            rawArg = rawArg.Replace("\"", "\\\"")
-                .Replace("%LISTS%", listsPath)
-                .Replace("%BIN%", binPath).Replace("%~dp0", "")
-                .Replace("%GameFilterStatus%", _gameFilterStatus)
-                .Replace("%GameFilter%", _gameFilter)
-                .Replace("%GameFilterTCP%", _gameFilterTCP)
-                .Replace("%GameFilterUDP%", _gameFilterUDP);
-            rawArg = System.Text.RegularExpressions.Regex.Replace(rawArg, @"--([a-zA-Z0-9\-]+)=", "--$1 ");
-            Debug.WriteLine("Получены аргументы: " + rawArg);
-            return rawArg.Trim();
-        }
-
-        /// <summary>
-        /// Ищет путь к папке со списками адресов.
-        /// </summary>
-        /// <returns>
-        /// Путь к папке, содержащей файл со списком.
-        /// Если папка не найдена, возвращается пустая строка.
-        /// </returns>
-        private string GetListsPath()
-        {
-            string[] allFiles = Directory.GetFiles(_folderPath, "*", SearchOption.AllDirectories);
-
-            foreach (string file in allFiles)
-            {
-                string name = Path.GetFileName(file);
-
-                if (name.Contains("list", StringComparison.OrdinalIgnoreCase))
-                {
-                    string listPath = Path.GetDirectoryName(file) ?? "";
-                    return Path.GetRelativePath(_folderPath, listPath);
-                }
-            }
-
-            return "";
-        }
-
-        /// <summary>
-        /// Ищет исполняемый файл winws.exe.
-        /// </summary>
-        /// <returns>
-        /// Полный путь к файлу winws.exe.
-        /// Если файл не найден, возвращается пустая строка.
-        /// </returns>
-        private string GetWinsPath()
-        {
-            string[] allFiles = Directory.GetFiles(_folderPath, "*", SearchOption.AllDirectories);
-
-            foreach (string file in allFiles)
-            {
-                string name = Path.GetFileName(file);
-
-                if (name.Equals("winws.exe", StringComparison.OrdinalIgnoreCase))
-                {
-                    return Path.GetRelativePath(_folderPath, file);
-                }
-            }
-
-            return "";
-        }
-
-        /// <summary>
-        /// Содержит результат выполнения внешней утилиты.
-        /// </summary>
-        private sealed class ProcessResult
-        {
-            /// <summary>
-            /// Код завершения процесса.
-            /// Нулевое значение обычно означает успешное выполнение.
-            /// </summary>
-            public int ExitCode { get; init; }
-
-            /// <summary>
-            /// Стандартный вывод программы.
-            /// </summary>
-            public string Output { get; init; } = "";
-
-            /// <summary>
-            /// Вывод программы, содержащий сообщения об ошибках.
-            /// </summary>
-            public string Error { get; init; } = "";
-        }
-
-        /// <summary>
-        /// Запускает внешнюю консольную утилиту в скрытом режиме асинхронно.
-        /// </summary>
-        /// <param name="fileName">
-        /// Имя или полный путь к исполняемому файлу.
-        /// Например: sc.exe, netsh.exe или reg.exe.
-        /// </param>
-        /// <param name="arguments">
-        /// Аргументы командной строки.
-        /// </param>
-        /// <param name="ignoreErrors">
-        /// Если true, сообщения об ошибках
-        /// не выводятся в консоль.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Токен отмены операции.
-        /// </param>
-        /// <returns>
-        /// Объект с кодом завершения,
-        /// стандартным выводом и сообщением об ошибке.
-        /// </returns>
-        private async Task<ProcessResult> RunUtilityAsync(string fileName, string arguments, bool ignoreErrors = false, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = arguments,
-
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-
-                using var process = new Process
-                {
-                    StartInfo = psi
-                };
-
-                if (!process.Start())
-                {
-                    string error = $"Не удалось запустить утилиту: {fileName}";
-
-                    if (!ignoreErrors)
-                    {
-                        Debug.WriteLine(error);
-                    }
-
-                    return new ProcessResult
-                    {
-                        ExitCode = -1,
-                        Error = error
-                    };
-                }
-
-                // Асинхронное чтение вывода
-                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-                Task<string> errorTask = process.StandardError.ReadToEndAsync();
-
-                // Асинхронное ожидание завершения процесса с поддержкой отмены
-                await process.WaitForExitAsync(cancellationToken);
-                await Task.Delay(100);
-                string output = await outputTask;
-                string errorOutput = await errorTask;
-
-                if (!ignoreErrors && process.ExitCode != 0)
-                {
-                    Debug.WriteLine($"{fileName} ошибка: {errorOutput.Trim()}");
-                }
-
-                return new ProcessResult
-                {
-                    ExitCode = process.ExitCode,
-                    Output = output,
-                    Error = errorOutput
-                };
-            }
-            catch (OperationCanceledException)
-            {
-                if (!ignoreErrors)
-                {
-                    Debug.WriteLine($"Операция отменена для {fileName}");
-                }
-
-                return new ProcessResult
-                {
-                    ExitCode = -1,
-                    Error = "Операция отменена"
-                };
-            }
-            catch (Exception ex)
-            {
-                if (!ignoreErrors)
-                {
-                    Debug.WriteLine($"Ошибка запуска {fileName}: {ex.Message}");
-                }
-
-                return new ProcessResult
-                {
-                    ExitCode = -1,
-                    Error = ex.Message
-                };
-            }
-        }
-
-        /// <summary>
-        /// Проверяет состояние TCP timestamps
-        /// и при необходимости включает их асинхронно.
-        /// </summary>
-        private async Task EnableTcpTimestampsAsync(CancellationToken cancellationToken = default)
-        {
-            ProcessResult result = await RunUtilityAsync("netsh.exe", "interface tcp show global", cancellationToken: cancellationToken);
-
-            if (result.ExitCode != 0)
-            {
-                return;
-            }
-
-            string output = result.Output.ToLowerInvariant();
-
-            if (!output.Contains("timestamps") || !output.Contains("enabled"))
-            {
-                ProcessResult enableResult = await RunUtilityAsync("netsh.exe", "interface tcp set global timestamps=enabled", cancellationToken: cancellationToken);
-
-                if (enableResult.ExitCode == 0)
-                {
-                    Debug.WriteLine("TCP timestamps включены.");
-                }
-            }
-            else
-            {
-                Debug.WriteLine("TCP timestamps уже включены.");
-            }
-        }
-
-        /// <summary>
-        /// Создаёт и запускает службу Zapret асинхронно.
-        /// </summary>
-        /// <param name="fileName">
-        /// Имя BAT-файла со стратегией обхода.
-        /// </param>
-        /// <param name="enableTcp">
-        /// Если true, перед установкой службы
-        /// включает TCP timestamps.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Токен отмены операции.
-        /// </param>
-        /// <returns>
-        /// true, если служба успешно создана и запущена;
-        /// false, если произошла ошибка.
-        /// </returns>
+        /// <summary>Создаёт и запускает службу Zapret асинхронно.</summary>
+        /// <param name="fileName">Имя BAT-файла со стратегией обхода.</param>
+        /// <param name="enableTcp">Если true, перед установкой службы включает TCP timestamps.</param>
+        /// <param name="cancellationToken">Токен отмены операции.</param>
+        /// <returns>true, если служба успешно создана и запущена; false, если произошла ошибка.</returns>
         public async Task<bool> InstallServiceAsync(string fileName, bool enableTcp = true, CancellationToken cancellationToken = default)
         {
             string strategyFilePath = _folderPath + '\\' + fileName;
@@ -432,11 +173,7 @@ namespace AutoCheckZapret.Services
             return serviceStarted & processStarted;
         }
 
-        /// <summary>
-        /// Останавливает и удаляет службу Zapret асинхронно,
-        /// завершает процесс winws.exe и удаляет
-        /// связанные службы WinDivert.
-        /// </summary>
+        /// <summary>Останавливает и удаляет службу Zapret асинхронно, завершает процесс winws.exe и удаляет связанные службы WinDivert.</summary>
         public async Task RemoveServiceAsync(CancellationToken cancellationToken = default)
         {
             await RunUtilityAsync("sc.exe", $"stop \"{_serviceName}\"", ignoreErrors: true, cancellationToken: cancellationToken);
@@ -462,9 +199,57 @@ namespace AutoCheckZapret.Services
             Debug.WriteLineIf(removed, "Ошибка завершения службы");
         }
 
-        /// <summary>
-        /// Ожидает указанный статус у сервиса в течение заданного времени.
-        /// </summary>
+        /// <summary>Проверяет, запущена ли служба Zapret на компьютере пользователя.</summary>
+        /// <returns>true, если служба Zapret существует и находится в состоянии Running; false в противном случае.</returns>
+        public bool IsServiceRunning()
+        {
+            try
+            {
+                using (ServiceController sc = new ServiceController(_serviceName))
+                {
+                    return sc.Status == ServiceControllerStatus.Running;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Ошибка при проверке состояния службы: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>Проверяет, запущен ли процесс winws.exe (основной процесс Zapret).</summary>
+        /// <returns>true, если процесс winws.exe запущен; false в противном случае.</returns>
+        public bool IsProcessRunning()
+        {
+            try
+            {
+                Process[] processes = Process.GetProcessesByName("winws");
+                return processes.Length > 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Ошибка при проверке процесса: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>Комплексная проверка работы Zapret. Проверяет как службу, так и наличие процесса winws.exe.</summary>
+        /// <returns>true, если служба запущена ИЛИ процесс winws.exe запущен; false в противном случае.</returns>
+        public bool IsZapretRunning()
+        {
+            bool serviceRunning = IsServiceRunning();
+            bool processRunning = IsProcessRunning();
+
+            Debug.WriteLine($"Состояние службы: {serviceRunning}, Состояние процесса: {processRunning}");
+
+            return serviceRunning || processRunning;
+        }
+
+        /// <summary>Ожидает указанный статус у сервиса в течение заданного времени.</summary>
         /// <param name="serviceName">Имя сервиса</param>
         /// <param name="desiredStatus">Ожидаймый статус</param>
         /// <param name="timeout">Время ожидния</param>
@@ -478,7 +263,6 @@ namespace AutoCheckZapret.Services
                     if (sc.Status == desiredStatus)
                         return true;
 
-                    // WaitForStatus — синхронный, поэтому оборачиваем в Task.Run
                     await Task.Run(() => sc.WaitForStatus(desiredStatus, timeout));
                     return sc.Status == desiredStatus;
                 }
@@ -490,9 +274,215 @@ namespace AutoCheckZapret.Services
             }
         }
 
-        /// <summary>
-        /// Ожидает появления процесса с указанным именем в течение заданного времени.
-        /// </summary>
+        #region Приватные методы
+
+        /// <summary>Извлекает аргументы запуска из файла стратегии.</summary>
+        /// <param name="filePath">Путь к BAT-файлу со стратегией.</param>
+        /// <returns>Строка с аргументами запуска. Если аргументы не найдены, возвращается сообщение «Аргументы не найдены».</returns>
+        private string GetBypassArg(string filePath)
+        {
+            string content = File.ReadAllText(filePath);
+
+            int index = content.IndexOf("--", StringComparison.Ordinal);
+
+            if (index == -1)
+            {
+                return "Аргументы не найдены";
+            }
+
+            string rawArg = content[index..];
+            rawArg = rawArg.Replace("--hostlist=\"%LISTS%list-general-user.txt\"", "")
+                           .Replace("--hostlist-exclude=\"%LISTS%list-exclude-user.txt\"", "")
+                           .Replace("--ipset-exclude=\"%LISTS%ipset-exclude-user.txt\"", "");
+            rawArg = rawArg.Replace("^!", "!").Replace("^", " ").Replace("\r", " ").Replace("\n", " ");
+
+            string listsPath = string.IsNullOrEmpty(_listsPath) ? "" : _listsPath.TrimEnd('\\') + "\\";
+            string binPath = string.IsNullOrEmpty(_binPath) ? "" : _binPath.TrimEnd('\\') + "\\";
+
+            rawArg = rawArg.Replace("\"", "\\\"")
+                .Replace("%LISTS%", listsPath)
+                .Replace("%BIN%", binPath).Replace("%~dp0", "")
+                .Replace("%GameFilterStatus%", _gameFilterStatus)
+                .Replace("%GameFilter%", _gameFilter)
+                .Replace("%GameFilterTCP%", _gameFilterTCP)
+                .Replace("%GameFilterUDP%", _gameFilterUDP);
+            rawArg = System.Text.RegularExpressions.Regex.Replace(rawArg, @"--([a-zA-Z0-9\-]+)=", "--$1 ");
+            Debug.WriteLine("Получены аргументы: " + rawArg);
+            return rawArg.Trim();
+        }
+
+        /// <summary>Ищет путь к папке со списками адресов.</summary>
+        /// <returns>Путь к папке, содержащей файл со списком. Если папка не найдена, возвращается пустая строка.</returns>
+        private string GetListsPath()
+        {
+            string[] allFiles = Directory.GetFiles(_folderPath, "*", SearchOption.AllDirectories);
+
+            foreach (string file in allFiles)
+            {
+                string name = Path.GetFileName(file);
+
+                if (name.Contains("list", StringComparison.OrdinalIgnoreCase))
+                {
+                    string listPath = Path.GetDirectoryName(file) ?? "";
+                    return Path.GetRelativePath(_folderPath, listPath);
+                }
+            }
+
+            return "";
+        }
+
+        /// <summary>Ищет исполняемый файл winws.exe.</summary>
+        /// <returns>Полный путь к файлу winws.exe. Если файл не найден, возвращается пустая строка.</returns>
+        private string GetWinsPath()
+        {
+            string[] allFiles = Directory.GetFiles(_folderPath, "*", SearchOption.AllDirectories);
+
+            foreach (string file in allFiles)
+            {
+                string name = Path.GetFileName(file);
+
+                if (name.Equals("winws.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Path.GetRelativePath(_folderPath, file);
+                }
+            }
+
+            return "";
+        }
+
+        /// <summary>Содержит результат выполнения внешней утилиты.</summary>
+        private sealed class ProcessResult
+        {
+            /// <summary>Код завершения процесса. Нулевое значение обычно означает успешное выполнение.</summary>
+            public int ExitCode { get; init; }
+
+            /// <summary>Стандартный вывод программы.</summary>
+            public string Output { get; init; } = "";
+
+            /// <summary>Вывод программы, содержащий сообщения об ошибках.</summary>
+            public string Error { get; init; } = "";
+        }
+
+        /// <summary>Запускает внешнюю консольную утилиту в скрытом режиме асинхронно.</summary>
+        /// <param name="fileName">Имя или полный путь к исполняемому файлу. Например: sc.exe, netsh.exe или reg.exe.</param>
+        /// <param name="arguments">Аргументы командной строки.</param>
+        /// <param name="ignoreErrors">Если true, сообщения об ошибках не выводятся в консоль.</param>
+        /// <param name="cancellationToken">Токен отмены операции.</param>
+        /// <returns>Объект с кодом завершения, стандартным выводом и сообщением об ошибке.</returns>
+        private async Task<ProcessResult> RunUtilityAsync(string fileName, string arguments, bool ignoreErrors = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                using var process = new Process
+                {
+                    StartInfo = psi
+                };
+
+                if (!process.Start())
+                {
+                    string error = $"Не удалось запустить утилиту: {fileName}";
+
+                    if (!ignoreErrors)
+                    {
+                        Debug.WriteLine(error);
+                    }
+
+                    return new ProcessResult
+                    {
+                        ExitCode = -1,
+                        Error = error
+                    };
+                }
+
+                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+                Task<string> errorTask = process.StandardError.ReadToEndAsync();
+
+                await process.WaitForExitAsync(cancellationToken);
+                await Task.Delay(100);
+                string output = await outputTask;
+                string errorOutput = await errorTask;
+
+                if (!ignoreErrors && process.ExitCode != 0)
+                {
+                    Debug.WriteLine($"{fileName} ошибка: {errorOutput.Trim()}");
+                }
+
+                return new ProcessResult
+                {
+                    ExitCode = process.ExitCode,
+                    Output = output,
+                    Error = errorOutput
+                };
+            }
+            catch (OperationCanceledException)
+            {
+                if (!ignoreErrors)
+                {
+                    Debug.WriteLine($"Операция отменена для {fileName}");
+                }
+
+                return new ProcessResult
+                {
+                    ExitCode = -1,
+                    Error = "Операция отменена"
+                };
+            }
+            catch (Exception ex)
+            {
+                if (!ignoreErrors)
+                {
+                    Debug.WriteLine($"Ошибка запуска {fileName}: {ex.Message}");
+                }
+
+                return new ProcessResult
+                {
+                    ExitCode = -1,
+                    Error = ex.Message
+                };
+            }
+        }
+
+        /// <summary>Проверяет состояние TCP timestamps и при необходимости включает их асинхронно.</summary>
+        private async Task EnableTcpTimestampsAsync(CancellationToken cancellationToken = default)
+        {
+            ProcessResult result = await RunUtilityAsync("netsh.exe", "interface tcp show global", cancellationToken: cancellationToken);
+
+            if (result.ExitCode != 0)
+            {
+                return;
+            }
+
+            string output = result.Output.ToLowerInvariant();
+
+            if (!output.Contains("timestamps") || !output.Contains("enabled"))
+            {
+                ProcessResult enableResult = await RunUtilityAsync("netsh.exe", "interface tcp set global timestamps=enabled", cancellationToken: cancellationToken);
+
+                if (enableResult.ExitCode == 0)
+                {
+                    Debug.WriteLine("TCP timestamps включены.");
+                }
+            }
+            else
+            {
+                Debug.WriteLine("TCP timestamps уже включены.");
+            }
+        }
+
+        /// <summary>Ожидает появления процесса с указанным именем в течение заданного времени.</summary>
         /// <param name="processName">Имя процесса без расширения (например, "winws").</param>
         /// <param name="timeout">Максимальное время ожидания.</param>
         /// <param name="cancellationToken">Токен отмены.</param>
@@ -505,18 +495,18 @@ namespace AutoCheckZapret.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                // Проверяем наличие процесса (без учёта регистра и расширения)
                 Process[] processes = Process.GetProcessesByName(processName);
                 if (processes.Length > 0)
                 {
                     return true;
                 }
 
-                // Небольшая пауза перед следующей проверкой
                 await Task.Delay(200, cancellationToken);
             }
 
             return false;
         }
+
+        #endregion
     }
 }
