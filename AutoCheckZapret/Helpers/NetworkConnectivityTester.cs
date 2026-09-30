@@ -5,7 +5,10 @@ using System.Net.Http.Headers;
 
 namespace AutoCheckZapret.Helpers
 {
-    public static class UrlChecker
+    /// <summary>
+    /// Класс-помощник для проверки доступности сетевых ресурсов
+    /// </summary>
+    public static class NetworkConnectivityTester
     {
         private static readonly SocketsHttpHandler handler = new()
         {
@@ -19,15 +22,11 @@ namespace AutoCheckZapret.Helpers
 
         private static readonly HttpClient client = new(handler);
 
-        public static async Task<bool> IsUrlRespondingAsync(
-            string url,
-            int timeoutSeconds = 10)
+        public static async Task<bool> IsUrlRespondingAsync(string url, int timeoutSeconds = 10)
         {
             try
             {
-                using var request = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    url)
+                using var request = new HttpRequestMessage(HttpMethod.Get, url)
                 {
                     // Принудительно используем HTTP/1.1
                     Version = HttpVersion.Version11,
@@ -47,29 +46,22 @@ namespace AutoCheckZapret.Helpers
 
                 request.Headers.Pragma.ParseAdd("no-cache");
 
-                using var cts = new CancellationTokenSource(
-                    TimeSpan.FromSeconds(timeoutSeconds));
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
 
                 Debug.WriteLine($"Тест: {url}");
 
-                using var response = await client.SendAsync(
-                    request,
-                    HttpCompletionOption.ResponseHeadersRead,
-                    cts.Token);
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
 
-                Debug.WriteLine(
-                    $"{url} Ответ: {(int)response.StatusCode} {response.StatusCode}");
+                Debug.WriteLine($"{url} Ответ: {(int)response.StatusCode} {response.StatusCode}");
 
                 foreach (var header in response.Headers)
                 {
-                    Debug.WriteLine(
-                        $"{header.Key}: {string.Join(", ", header.Value)}");
+                    Debug.WriteLine($"{header.Key}: {string.Join(", ", header.Value)}");
                 }
 
                 foreach (var header in response.Content.Headers)
                 {
-                    Debug.WriteLine(
-                        $"{header.Key}: {string.Join(", ", header.Value)}");
+                    Debug.WriteLine($"{header.Key}: {string.Join(", ", header.Value)}");
                 }
 
                 // Любой ответ сервера считается валидным
